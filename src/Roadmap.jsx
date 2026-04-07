@@ -11,6 +11,8 @@ const STEPS_LIST = [
     "Rendering Neon Void interface"
 ];
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function Roadmap({ onBack }) {
     const [prompt, setPrompt] = useState('Machine Learning Core');
     const [roadmapData, setRoadmapData] = useState(null);
@@ -33,7 +35,7 @@ export default function Roadmap({ onBack }) {
         }, 900);
 
         try {
-            const fetchPromise = fetch('http://localhost:5000/api/roadmap', {
+            const fetchPromise = fetch(`${API_BASE}/api/roadmap`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt })

@@ -180,6 +180,9 @@ function McqQuiz({ data }) {
 ═══════════════════════════════════════════════════════ */
 const WELCOME_MSG = { role: 'bot', text: "Hello! I'm Lumina AI, powered by Llama 3.1 via Groq. I **remember our conversation** for this session! Ask me anything — or request a quiz like **\"Give me 5 MCQ on JavaScript\"**!" };
 
+// Production Backend URL (or localhost for dev)
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 function App() {
   const [currentView, setCurrentView] = useState('chat'); // 'chat' or 'roadmap'
   const [messages, setMessages] = useState([WELCOME_MSG]);
@@ -201,7 +204,7 @@ function App() {
   const handleNewChat = async () => {
     handleStop();
     try {
-      await fetch('http://localhost:5000/api/clear', {
+      await fetch(`${API_BASE}/api/clear`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sessionIdRef.current })
@@ -227,7 +230,7 @@ function App() {
     setIsSuggesting(true);
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/suggest', {
+        const res = await fetch(`${API_BASE}/api/suggest`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: input })
@@ -269,8 +272,8 @@ function App() {
       // ── Decide which endpoint to hit ──
       const mcqMode = isMcqRequest(userMessage);
       const endpoint = mcqMode
-        ? 'http://localhost:5000/api/mcq'
-        : 'http://localhost:5000/api/chat';
+        ? `${API_BASE}/api/mcq`
+        : `${API_BASE}/api/chat`;
 
       const response = await fetch(endpoint, {
         method: 'POST',
