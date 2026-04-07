@@ -7,7 +7,8 @@
     background-color: #000000;
     color: #e2e2e2;
     font-family: 'Inter', sans-serif;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     position: fixed;
     top: 0;
     left: 0;
@@ -26,6 +27,17 @@
     flex-shrink: 0;
     z-index: 210;
     box-shadow: 15px 0 60px rgba(0, 0, 0, 1);
+}
+
+@media (max-width: 1024px) {
+    .roadmap-container .roadmap-sidebar {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+    }
 }
 
 .roadmap-container .back-button {
@@ -103,10 +115,23 @@
     font-weight: 800;
     color: #fff;
     text-align: center;
-    margin-bottom: 6rem;
+    margin-bottom: 4rem;
     background: linear-gradient(to bottom, #fff 0%, #888 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+@media (max-width: 768px) {
+    .void-main-title {
+        font-size: 1.75rem;
+        margin-bottom: 2.5rem;
+        padding: 0 1rem;
+    }
+
+    .void-main-title .subtitle {
+        font-size: 0.8rem;
+    }
 }
 
 /* ═════════ MOBILE OPTIMIZATION ═════════ */
@@ -123,39 +148,25 @@
 @media (max-width: 1024px) {
     .roadmap-container.neon-void-mode {
         flex-direction: column;
-    }
-
-    .roadmap-container .roadmap-sidebar {
-        width: 100%;
-        padding: 1.5rem;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .back-button {
-        margin-bottom: 1.5rem;
+        overflow-y: auto;
+        /* Allow the container itself to scroll if needed on mobile */
     }
 
     .scroll-wrapper {
-        padding: 3rem 1.5rem;
-    }
-
-    .void-main-title {
-        font-size: 2rem;
-        margin-bottom: 3rem;
-    }
-
-    /* Nodes layout for mobile */
-    .void-stage-row {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        margin-bottom: 3rem;
+        padding: 2rem 1rem;
     }
 
     .neon-vector-line {
         left: 20px;
         transform: none;
+        top: 0;
+    }
+
+    .void-stage-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        margin-bottom: 3rem;
+        padding-left: 40px;
     }
 
     .vector-junction {
@@ -164,15 +175,30 @@
     }
 
     .holographic-card {
-        width: calc(100% - 40px) !important;
-        margin-left: 40px !important;
-        margin-right: 0 !important;
-        padding: 0;
+        width: 100% !important;
+        margin: 0 !important;
         border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
     }
 
     .holographic-connector {
         display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .void-stage-row {
+        padding-left: 35px;
+    }
+
+    .neon-vector-line,
+    .vector-junction {
+        left: 15px;
+    }
+
+    .holographic-card {
+        width: calc(100% + 10px);
+        /* Slightly wider cards on tiny screens */
     }
 }
 
