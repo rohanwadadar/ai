@@ -5,16 +5,15 @@ import './Roadmap.css';
 import AiAvatar from './AiAvatar';
 
 const STEPS_LIST = [
-    "Initializing coordinates",
-    "Generating dimensional pathways",
-    "Structuring holographic nodes",
-    "Rendering Neon Void interface"
+    "Analyzing subject...",
+    "Building roadmap nodes...",
+    "Finalizing learning path...",
 ];
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function Roadmap({ onBack }) {
-    const [prompt, setPrompt] = useState('Machine Learning Core');
+    const [prompt, setPrompt] = useState('Machine Learning');
     const [roadmapData, setRoadmapData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [activeStep, setActiveStep] = useState(0);
@@ -32,189 +31,131 @@ export default function Roadmap({ onBack }) {
 
         const stepInterval = setInterval(() => {
             setActiveStep(prev => (prev < STEPS_LIST.length - 1 ? prev + 1 : prev));
-        }, 900);
+        }, 1200);
 
         try {
-            const fetchPromise = fetch(`${API_BASE}/api/roadmap`, {
+            const res = await fetch(`${API_BASE}/api/roadmap`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt })
             });
-            const delayPromise = new Promise(resolve => setTimeout(resolve, 4000));
 
-            const [response, _] = await Promise.all([fetchPromise, delayPromise]);
-
-            if (!response.ok) throw new Error("Failed to generate");
-
-            const data = await response.json();
+            if (!res.ok) throw new Error("Failed");
+            const data = await res.json();
 
             setRobotStatus('happy');
             setRobotFullScreen(false);
-
             setRoadmapData(data);
-            setActiveStep(STEPS_LIST.length);
-            setTimeout(() => setRobotStatus('idle'), 3000);
         } catch (err) {
-            console.error(err);
-            alert("System Error generating the void map.");
+            alert("Error generating roadmap.");
         } finally {
             clearInterval(stepInterval);
             setIsLoading(false);
+            setTimeout(() => setRobotStatus('idle'), 2000);
         }
     };
 
     return (
         <div className="roadmap-container neon-void-mode">
-
             <AiAvatar status={robotStatus} fullScreen={robotFullScreen} />
 
-            {/* Configuration Sidebar */}
             <aside className="roadmap-sidebar">
-
-                {/* ── MOBILE VIEW CONTENT ── */}
-                <div className="mobile-header-row">
+                {/* Standard Header */}
+                <div className="sidebar-header">
                     <button className="back-button" onClick={onBack}>
-                        <ArrowLeft size={16} />
+                        <ArrowLeft size={20} />
+                        <span className="desktop-only text-label">Back to Chat</span>
                     </button>
-                    <span style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#ccc', letterSpacing: '0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {prompt || 'Roadmap Interface'}
-                    </span>
-                    <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#4cd6fb', background: 'rgba(76,214,251,0.07)', border: '1px solid rgba(76,214,251,0.18)', padding: '3px 8px', borderRadius: '20px' }}>
-                        VOID v2
-                    </span>
+                    <h2 className="mobile-only-title">Roadmap Builder</h2>
                 </div>
 
-                <div className="mobile-input-row">
-                    <textarea
-                        className="styled-textarea"
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        disabled={isLoading}
-                        rows={1}
-                        placeholder="e.g., Python Architecture..."
-                    />
-                    <button className="neon-btn" onClick={generateRoadmap} disabled={isLoading}>
-                        {isLoading ? <Loader2 className="spin" size={16} /> : <><Compass size={14} /> Generate</>}
-                    </button>
-                </div>
-
-
-                {/* ── DESKTOP VIEW CONTENT ── */}
-                <div className="desktop-only">
-                    <button className="back-button" onClick={onBack}>
-                        <ArrowLeft size={18} />
-                        <span>Exit Interface</span>
-                    </button>
-
+                <div className="input-group-container">
                     <div className="prompt-card">
-                        <label>Target Domain:</label>
+                        <label className="desktop-only">What do you want to learn?</label>
                         <textarea
                             className="styled-textarea"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             disabled={isLoading}
-                            rows={3}
-                            placeholder="e.g., Artificial Intelligence Roadmap..."
+                            placeholder="e.g. React.js, Python, or Design Basics..."
+                            rows={window.innerWidth < 1024 ? 2 : 4}
                         />
                     </div>
-                </div>
 
-                {/* Shared Sequence Display */}
-                {isLoading && (
-                    <div className="steps-section">
-                        <h3>Booting sequence</h3>
-                        <ul className="steps-list">
-                            {STEPS_LIST.map((step, idx) => (
-                                <li key={idx} className={idx <= activeStep ? 'active' : 'pending'}>
-                                    {idx <= activeStep ? <span className="neon-tick">✓</span> : <span className="void-dot">•</span>}
-                                    <span>{step}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-
-                <div className="sidebar-footer desktop-only">
-                    <button className="create-content-btn neon-btn" onClick={generateRoadmap} disabled={isLoading}>
-                        {isLoading ? <Loader2 className="spin" size={20} /> : <><Compass size={18} /> Initiate Sequence</>}
+                    <button className="neon-btn main-action-btn" onClick={generateRoadmap} disabled={isLoading}>
+                        {isLoading ? <Loader2 className="spin" size={20} /> : <><Compass size={20} /> Generate Path</>}
                     </button>
                 </div>
 
+                {isLoading && (
+                    <div className="loading-status-area">
+                        <p>{STEPS_LIST[activeStep]}</p>
+                        <div className="progress-dots">
+                            {STEPS_LIST.map((_, i) => (
+                                <span key={i} className={`dot ${i === activeStep ? 'active' : ''}`} />
+                            ))}
+                        </div>
+                    </div>
+                )}
             </aside>
 
-            {/* Main Canvas */}
             <main className="roadmap-canvas">
                 {!roadmapData && !isLoading && (
-                    <div className="empty-state pulse-text">Awaiting terminal input mapping...</div>
+                    <div className="empty-state">Enter a topic to generate your interactive roadmap.</div>
                 )}
 
                 {isLoading && !roadmapData && (
                     <div className="empty-state">
-                        <Loader2 className="spin" size={30} style={{ marginRight: '1rem', color: '#4cd6fb' }} />
-                        Calibrating vectors...
+                        <Loader2 className="spin" size={40} color="#4cd6fb" />
+                        <p>Constructing your personalized learning path...</p>
                     </div>
                 )}
 
                 {roadmapData && (
                     <div className="scroll-wrapper">
-                        <motion.h1
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="void-main-title"
-                        >
-                            {roadmapData.title}
-                            <span className="subtitle">System Generated Learning Vectors</span>
-                        </motion.h1>
+                        <header className="content-header">
+                            <h1 className="roadmap-title">{roadmapData.title}</h1>
+                            <p className="roadmap-subtitle">Step-by-step masterclass curated by Lumina AI</p>
+                        </header>
 
-                        <div className="vector-path-container">
-                            <div className="neon-vector-line"></div>
-
-                            {roadmapData.categories.map((cat, idx) => {
-                                const isLeft = idx % 2 === 0;
-
-                                return (
-                                    <motion.div
-                                        key={idx}
-                                        className={`void-stage-row ${isLeft ? 'row-left' : 'row-right'}`}
-                                        initial={{ opacity: 0, x: isLeft ? -50 : 50 }}
-                                        whileInView={{ opacity: 1, x: 0 }}
-                                        viewport={{ once: true, margin: "-100px" }}
-                                        transition={{ duration: 0.6, ease: "easeOut" }}
-                                    >
-                                        <div className="vector-junction"></div>
-                                        <div className="holographic-card">
-                                            <div className="card-header">
-                                                <h3 className="card-title">{cat.title}</h3>
-                                                <div className="card-index">0{idx + 1}</div>
-                                            </div>
-                                            <div className="card-body">
-                                                <ul className="hologram-bullets">
-                                                    {cat.topics.map((t, i) => (
-                                                        <li key={i}>
-                                                            <span className="holo-bullet-glow"></span>
-                                                            <span className="holo-text">{t.name}</span>
-                                                            {t.searchUrl && (
-                                                                <a href={t.searchUrl} target="_blank" rel="noopener noreferrer" className="holo-link">
-                                                                    <ExternalLink size={14} />
-                                                                </a>
-                                                            )}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
+                        <div className="timeline-container">
+                            <div className="timeline-line"></div>
+                            {roadmapData.categories.map((cat, idx) => (
+                                <motion.div
+                                    className="roadmap-node"
+                                    key={idx}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    viewport={{ once: true }}
+                                >
+                                    <div className="node-marker">0{idx + 1}</div>
+                                    <div className="node-card">
+                                        <h3 className="node-title">{cat.title}</h3>
+                                        <ul className="topic-list">
+                                            {cat.topics.map((topic, i) => (
+                                                <li key={i} className="topic-item">
+                                                    <span className="topic-bullet"></span>
+                                                    <span className="topic-name">{topic.name}</span>
+                                                    {topic.searchUrl && (
+                                                        <a href={topic.searchUrl} target="_blank" rel="noopener noreferrer" className="topic-link">
+                                                            <ExternalLink size={14} />
+                                                        </a>
+                                                    )}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </motion.div>
+                            ))}
                         </div>
 
                         {roadmapData.resources && roadmapData.resources.length > 0 && (
-                            <div className="void-resources-container">
-                                <h3>External Data Hubs</h3>
-                                <div className="void-links-grid">
+                            <div className="resources-section">
+                                <h3 className="section-label">Recommended Resources</h3>
+                                <div className="resources-grid">
                                     {roadmapData.resources.map((res, i) => (
-                                        <a key={i} href={res.url} target="_blank" rel="noopener noreferrer" className="void-resource-card">
-                                            <span className="truncate">{res.title}</span>
+                                        <a href={res.url} target="_blank" rel="noopener noreferrer" key={i} className="resource-link-card">
+                                            {res.title}
                                         </a>
                                     ))}
                                 </div>
