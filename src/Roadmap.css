@@ -14,6 +14,12 @@
     z-index: 200;
 }
 
+/* ── Hide mobile-only components on desktop ── */
+.mobile-header-row,
+.mobile-input-row {
+    display: none !important;
+}
+
 /* Sidebar styling (Desktop) */
 .roadmap-container .roadmap-sidebar {
     width: 380px;
@@ -38,8 +44,14 @@
     padding: 0.75rem 1.25rem;
     border-radius: 12px;
     cursor: pointer;
-    margin-bottom: 3rem;
+    margin-bottom: 2.5rem;
     transition: 0.3s;
+}
+
+.roadmap-container .back-button:hover {
+    color: #4cd6fb;
+    border-color: #4cd6fb;
+    background: rgba(76, 214, 251, 0.05);
 }
 
 .prompt-card {
@@ -60,17 +72,18 @@
     background: #050505;
     border: 1px solid #222;
     border-radius: 12px;
-    padding: 1rem;
+    padding: 1.2rem;
     color: #fff;
     resize: none;
     outline: none;
+    font-size: 0.95rem;
 }
 
 .neon-btn {
     background: linear-gradient(135deg, #4cd6fb, #00b4d8);
     color: #000;
     font-weight: 800;
-    padding: 1rem;
+    padding: 1.1rem;
     border-radius: 12px;
     border: none;
     cursor: pointer;
@@ -91,7 +104,7 @@
 }
 
 .scroll-wrapper {
-    padding: 4rem 10%;
+    padding: 6rem 10%;
     max-width: 1400px;
     margin: 0 auto;
 }
@@ -225,6 +238,21 @@
 
 /* ═════════ MOBILE OPTIMIZATION ═════════ */
 @media (max-width: 1024px) {
+
+    /* Show mobile-only elements */
+    .mobile-header-row {
+        display: flex !important;
+    }
+
+    .mobile-input-row {
+        display: flex !important;
+    }
+
+    /* Hide desktop-only elements */
+    .desktop-only {
+        display: none !important;
+    }
+
     .roadmap-container.neon-void-mode {
         flex-direction: column;
     }
@@ -242,8 +270,6 @@
 
     /* Header row: back btn + title + badge */
     .mobile-header-row {
-        display: flex;
-        align-items: center;
         gap: 10px;
         padding: 10px 14px;
         border-bottom: 1px solid #151515;
@@ -261,7 +287,6 @@
 
     /* Inline compact input row */
     .mobile-input-row {
-        display: flex;
         gap: 8px;
         align-items: center;
         padding: 10px 14px;
@@ -315,11 +340,6 @@
 
     .steps-list li.active {
         color: #4cd6fb;
-    }
-
-    .sidebar-footer {
-        display: none;
-        /* button moved into mobile-input-row */
     }
 
     /* ── Canvas ── */
@@ -381,7 +401,6 @@
 
     .holographic-card:hover {
         transform: none;
-        /* disable hover lift on touch */
     }
 
     .card-header {

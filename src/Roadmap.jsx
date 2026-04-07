@@ -71,7 +71,7 @@ export default function Roadmap({ onBack }) {
             {/* Configuration Sidebar */}
             <aside className="roadmap-sidebar">
 
-                {/* Mobile header row (back + title) */}
+                {/* ── MOBILE VIEW CONTENT ── */}
                 <div className="mobile-header-row">
                     <button className="back-button" onClick={onBack}>
                         <ArrowLeft size={16} />
@@ -84,7 +84,6 @@ export default function Roadmap({ onBack }) {
                     </span>
                 </div>
 
-                {/* Inline input + generate button */}
                 <div className="mobile-input-row">
                     <textarea
                         className="styled-textarea"
@@ -94,19 +93,33 @@ export default function Roadmap({ onBack }) {
                         rows={1}
                         placeholder="e.g., Python Architecture..."
                     />
-                    <button
-                        className="neon-btn"
-                        onClick={generateRoadmap}
-                        disabled={isLoading}
-                    >
-                        {isLoading
-                            ? <Loader2 className="spin" size={16} />
-                            : <><Compass size={14} /> Generate</>
-                        }
+                    <button className="neon-btn" onClick={generateRoadmap} disabled={isLoading}>
+                        {isLoading ? <Loader2 className="spin" size={16} /> : <><Compass size={14} /> Generate</>}
                     </button>
                 </div>
 
-                {/* Loading steps (compact pills row) */}
+
+                {/* ── DESKTOP VIEW CONTENT ── */}
+                <div className="desktop-only">
+                    <button className="back-button" onClick={onBack}>
+                        <ArrowLeft size={18} />
+                        <span>Exit Interface</span>
+                    </button>
+
+                    <div className="prompt-card">
+                        <label>Target Domain:</label>
+                        <textarea
+                            className="styled-textarea"
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                            disabled={isLoading}
+                            rows={3}
+                            placeholder="e.g., Artificial Intelligence Roadmap..."
+                        />
+                    </div>
+                </div>
+
+                {/* Shared Sequence Display */}
                 {isLoading && (
                     <div className="steps-section">
                         <h3>Booting sequence</h3>
@@ -121,8 +134,7 @@ export default function Roadmap({ onBack }) {
                     </div>
                 )}
 
-                {/* Desktop-only footer button (hidden on mobile via CSS) */}
-                <div className="sidebar-footer">
+                <div className="sidebar-footer desktop-only">
                     <button className="create-content-btn neon-btn" onClick={generateRoadmap} disabled={isLoading}>
                         {isLoading ? <Loader2 className="spin" size={20} /> : <><Compass size={18} /> Initiate Sequence</>}
                     </button>
@@ -130,14 +142,17 @@ export default function Roadmap({ onBack }) {
 
             </aside>
 
-            {/* Main Canvas with Scrolling Vector Map */}
+            {/* Main Canvas */}
             <main className="roadmap-canvas">
                 {!roadmapData && !isLoading && (
                     <div className="empty-state pulse-text">Awaiting terminal input mapping...</div>
                 )}
 
                 {isLoading && !roadmapData && (
-                    <div className="empty-state"><Loader2 className="spin" size={30} style={{ marginRight: '1rem', color: '#4cd6fb' }} /> Calibrating vectors...</div>
+                    <div className="empty-state">
+                        <Loader2 className="spin" size={30} style={{ marginRight: '1rem', color: '#4cd6fb' }} />
+                        Calibrating vectors...
+                    </div>
                 )}
 
                 {roadmapData && (
@@ -152,7 +167,6 @@ export default function Roadmap({ onBack }) {
                         </motion.h1>
 
                         <div className="vector-path-container">
-                            {/* The Literal Continuous Future Vector Background */}
                             <div className="neon-vector-line"></div>
 
                             {roadmapData.categories.map((cat, idx) => {
@@ -167,30 +181,20 @@ export default function Roadmap({ onBack }) {
                                         viewport={{ once: true, margin: "-100px" }}
                                         transition={{ duration: 0.6, ease: "easeOut" }}
                                     >
-                                        {/* The holographic junction node */}
-                                        <div className="vector-junction">
-                                            <div className="junction-core"></div>
-                                        </div>
-
-                                        {/* The Holographic Connector */}
-                                        <div className="holographic-connector"></div>
-
-                                        {/* The Holographic Info Card */}
+                                        <div className="vector-junction"></div>
                                         <div className="holographic-card">
-
                                             <div className="card-header">
                                                 <h3 className="card-title">{cat.title}</h3>
                                                 <div className="card-index">0{idx + 1}</div>
                                             </div>
-
                                             <div className="card-body">
                                                 <ul className="hologram-bullets">
                                                     {cat.topics.map((t, i) => (
-                                                        <li key={i} className={`level-${t.level}`}>
+                                                        <li key={i}>
                                                             <span className="holo-bullet-glow"></span>
                                                             <span className="holo-text">{t.name}</span>
                                                             {t.searchUrl && (
-                                                                <a href={t.searchUrl} target="_blank" rel="noopener noreferrer" className="holo-link" title="Query Database">
+                                                                <a href={t.searchUrl} target="_blank" rel="noopener noreferrer" className="holo-link">
                                                                     <ExternalLink size={14} />
                                                                 </a>
                                                             )}
@@ -199,22 +203,14 @@ export default function Roadmap({ onBack }) {
                                                 </ul>
                                             </div>
                                         </div>
-
                                     </motion.div>
                                 );
                             })}
                         </div>
 
-                        {/* Web Search Resources returned by DuckDuckGo */}
                         {roadmapData.resources && roadmapData.resources.length > 0 && (
-                            <motion.div
-                                className="void-resources-container"
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: 0.3 }}
-                            >
-                                <h3><ExternalLink size={18} style={{ marginRight: '0.5rem', display: 'inline-block' }} /> External Data Hubs</h3>
+                            <div className="void-resources-container">
+                                <h3>External Data Hubs</h3>
                                 <div className="void-links-grid">
                                     {roadmapData.resources.map((res, i) => (
                                         <a key={i} href={res.url} target="_blank" rel="noopener noreferrer" className="void-resource-card">
@@ -222,9 +218,8 @@ export default function Roadmap({ onBack }) {
                                         </a>
                                     ))}
                                 </div>
-                            </motion.div>
+                            </div>
                         )}
-
                     </div>
                 )}
             </main>
