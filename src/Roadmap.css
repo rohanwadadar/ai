@@ -1,305 +1,455 @@
-/* Roadmap.css - SIMPLE EFFECTIVE MOBILE OPTIMIZED DESIGN */
+/* Roadmap.css - ACADEMIC SCHOLAR THEME */
 
-:root {
-    --primary: #4cd6fb;
-    --accent: #f72585;
-    --text: #e2e2e2;
-    --bg: #000000;
-    --surface: rgba(255, 255, 255, 0.05);
-    --border: rgba(255, 255, 255, 0.1);
-}
-
-.roadmap-container.neon-void-mode {
+.roadmap-container.academic-mode {
     display: flex;
     height: 100vh;
     width: 100vw;
-    background-color: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #f8fafc;
+    color: #1a1a1a;
+    font-family: 'Outfit', 'Inter', sans-serif;
     overflow: hidden;
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 500;
+    z-index: 600;
+}
+
+/* ── Persistent AI Portal ── */
+.avatar-portal {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 700;
+    pointer-events: none;
+    transform: scale(0.6);
+    transform-origin: top right;
 }
 
 /* Sidebar (Desktop) */
 .roadmap-sidebar {
-    width: 360px;
-    background: #0a0a0a;
-    border-right: 1px solid var(--border);
+    width: 380px;
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
     display: flex;
     flex-direction: column;
-    padding: 2rem 1.5rem;
+    padding: 3rem 2rem;
     flex-shrink: 0;
-    z-index: 510;
+    z-index: 610;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.02);
 }
 
 .sidebar-header {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
 }
 
 .back-button {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 0.6rem 1.2rem;
-    border-radius: 8px;
+    background: #f1f5f9;
+    border-radius: 12px;
+    padding: 0.8rem 1.2rem;
+    border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
     font-weight: 600;
+    color: #475569;
+    transition: 0.3s;
 }
 
-.input-group-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+.back-button:hover {
+    background: #e2e8f0;
+    color: #1e293b;
 }
 
-.prompt-card label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    color: #888;
-}
-
-.styled-textarea {
+.scholar-textarea {
     width: 100%;
-    background: #050505;
-    border: 1px solid #222;
-    border-radius: 10px;
-    padding: 1rem;
-    color: #fff;
-    resize: none;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.2rem;
     font-size: 1rem;
+    line-height: 1.5;
+    resize: none;
+    color: #1e293b;
     outline: none;
+    transition: 0.3s;
 }
 
-.neon-btn {
+.scholar-textarea:focus {
+    border-color: #3b82f6;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.initiate-btn {
     width: 100%;
-    background: linear-gradient(135deg, var(--primary), #00b4d8);
-    color: #000;
-    padding: 1rem;
-    border-radius: 10px;
+    background: linear-gradient(135deg, #14b8a6, #0ea5e9);
+    color: #fff;
+    padding: 1.2rem;
+    border-radius: 16px;
     border: none;
     font-weight: 800;
     cursor: pointer;
     font-size: 1rem;
+    margin-top: 1.5rem;
+    box-shadow: 0 10px 20px rgba(14, 165, 233, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-}
-
-.loading-status-area {
-    margin-top: 2rem;
-    text-align: center;
-    color: var(--primary);
-    font-size: 0.9rem;
-}
-
-.progress-dots {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-
-.progress-dots .dot {
-    width: 6px;
-    height: 6px;
-    background: #333;
-    border-radius: 50%;
     transition: 0.3s;
 }
 
-.progress-dots .dot.active {
-    background: var(--primary);
-    box-shadow: 0 0 10px var(--primary);
-    transform: scale(1.3);
+.initiate-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(14, 165, 233, 0.3);
 }
 
-/* Main Area */
+/* Main Canvas */
 .roadmap-canvas {
     flex: 1;
     overflow-y: auto;
-    overflow-x: hidden;
-    background: radial-gradient(circle at center, #0a0a0a, #000);
+    background: linear-gradient(to bottom, #f8fafc, #ffffff, #f1f5f9);
+    position: relative;
+    padding-bottom: 10rem;
+}
+
+/* Scholarly Empty State */
+.scholarly-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 2rem;
+}
+
+.orb-bg {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.1), transparent 70%);
+    z-index: 0;
+}
+
+/* ═════════ THE ACADEMIC ROAD ═════════ */
+.academic-timeline-root {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 6rem 2rem;
     position: relative;
 }
 
-.scroll-wrapper {
-    padding: 4rem 10%;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.content-header {
+.academic-header {
     text-align: center;
-    margin-bottom: 4rem;
+    margin-bottom: 6rem;
 }
 
-.roadmap-title {
-    font-size: 2.5rem;
-    font-weight: 800;
-    line-height: 1.2;
-    margin-bottom: 0.5rem;
-}
-
-.roadmap-subtitle {
-    font-size: 1rem;
-    color: #888;
+.academic-badge {
+    background: #ccfbf1;
+    color: #0f766e;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2px;
 }
 
-/* Timeline UI */
-.timeline-container {
-    position: relative;
-    padding-left: 20px;
+.academic-main-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    margin-top: 1.5rem;
+    color: #0f172a;
 }
 
-.timeline-line {
+.academic-hero-text {
+    font-size: 1.2rem;
+    color: #64748b;
+    margin-top: 1rem;
+    max-width: 700px;
+    margin-inline: auto;
+}
+
+/* Desktop Road (Wide) */
+.desktop-road-timeline {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 450px;
+    bottom: 500px;
+    width: 60px;
+    background: #e2e8f0;
+    border-radius: 50px;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 1;
+    border-left: 1px solid #cbd5e1;
+    border-right: 1px solid #cbd5e1;
+}
+
+.road-markers {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2rem 0;
+}
+
+.road-dash {
+    width: 4px;
+    height: 24px;
+    background: #ffffff;
+    border-radius: 10px;
+    opacity: 0.8;
+}
+
+/* Stages */
+.stages-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8rem;
+    z-index: 10;
+}
+
+.stage-row {
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+/* Standard desktop row */
+.stage-spacer {
+    flex: 1;
+    min-width: 45%;
+}
+
+.stage-card-wrap {
+    flex: 1;
+    min-width: 45%;
+}
+
+/* Alternating flip */
+.row-alt {
+    flex-direction: row-reverse;
+}
+
+.academic-card {
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    border-radius: 32px;
+    padding: 2.5rem;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+    transition: 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+    overflow: hidden;
+}
+
+.academic-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 35px 70px -15px rgba(0, 0, 0, 0.12);
+}
+
+.card-accent {
     position: absolute;
     top: 0;
-    bottom: 0;
     left: 0;
-    width: 2px;
-    background: linear-gradient(to bottom, var(--primary), var(--accent));
-    box-shadow: 0 0 10px var(--primary);
+    right: 0;
+    height: 8px;
 }
 
-.roadmap-node {
+.academic-card-header {
     display: flex;
-    align-items: flex-start;
+    align-items: start;
     gap: 1.5rem;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
     position: relative;
 }
 
-.node-marker {
-    background: #000;
-    border: 2px solid var(--primary);
-    color: var(--primary);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+.icon-badge {
+    width: 70px;
+    height: 70px;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
+    color: #fff;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
-    margin-left: -20px;
-    z-index: 5;
 }
 
-.node-card {
-    background: rgba(18, 18, 18, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 1.5rem;
-    border-radius: 12px;
-    width: 100%;
+.card-info {
+    flex: 1;
 }
 
-.node-title {
-    font-size: 1.2rem;
-    color: #fff;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid #222;
-    padding-bottom: 0.5rem;
-}
-
-.topic-list {
-    list-style: none;
-    padding: 0;
-}
-
-.topic-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+.degree-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f172a;
     margin-bottom: 0.5rem;
-    color: #aaa;
-    font-size: 0.95rem;
 }
 
-.topic-bullet {
-    width: 5px;
-    height: 5px;
-    background: #666;
-    border-radius: 50%;
-}
-
-.topic-link {
-    color: var(--primary);
-}
-
-/* Resources */
-.resources-section {
-    margin-top: 5rem;
-    border-top: 1px solid #222;
-    padding-top: 3rem;
-}
-
-.section-label {
-    font-size: 1.5rem;
-    margin-bottom: 2rem;
-    color: #fff;
-    text-align: center;
-}
-
-.resources-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
-}
-
-.resource-link-card {
-    background: #0e0e0e;
-    border: 1px solid #1f1f1f;
-    padding: 1rem;
+.accent-line {
+    height: 4px;
+    width: 60px;
     border-radius: 10px;
-    color: var(--primary);
-    text-decoration: none;
-    text-align: center;
+}
+
+.year-pill {
+    position: absolute;
+    top: -5px;
+    right: 0;
+    color: #fff;
+    padding: 0.4rem 1rem;
+    border-radius: 100px;
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+}
+
+.learning-topics {
+    list-style: none;
+    padding: 0.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.topic-li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    color: #475569;
+    font-size: 1.05rem;
+}
+
+.scholar-link {
+    color: #3b82f6;
+    opacity: 0.5;
+    transition: 0.2s;
+}
+
+.scholar-link:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.academic-card-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.milestone-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.milestone-track {
+    display: flex;
+    gap: 4px;
+}
+
+.milestone-dot {
+    width: 12px;
+    height: 4px;
+    border-radius: 10px;
     transition: 0.3s;
 }
 
-.resource-link-card:hover {
-    background: var(--primary);
-    color: #000;
+/* Achievement Capsule */
+.final-achievement {
+    display: flex;
+    justify-content: center;
+    margin-top: 6rem;
 }
 
-.empty-state {
-    text-align: center;
-    margin: 20% auto;
-    color: #666;
-    font-size: 1.2rem;
-    max-width: 400px;
-    line-height: 1.6;
+.achievement-capsule {
+    background: linear-gradient(135deg, #14b8a6, #3b82f6, #9333ea);
+    color: #fff;
+    padding: 1rem 2.5rem;
+    border-radius: 100px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 15px 30px rgba(59, 130, 246, 0.4);
 }
 
-/* ═════════ MOBILE RE-DESIGN (SIMPLE & EFFECTIVE) ═════════ */
+/* ═════════ MOBILE OPTIMIZATION (SIMPLE) ═════════ */
+@media (max-width: 1200px) {
+    .desktop-road-timeline {
+        display: none;
+    }
+
+    .stage-row {
+        flex-direction: column !important;
+        gap: 3rem;
+    }
+
+    .stage-spacer {
+        display: none;
+    }
+
+    .stage-card-wrap {
+        min-width: 100%;
+    }
+
+    .academic-timeline-root {
+        padding: 4rem 1.5rem;
+    }
+
+    .academic-main-title {
+        font-size: 2.5rem;
+    }
+
+    .mobile-side-timeline {
+        position: absolute;
+        left: 2rem;
+        top: 350px;
+        bottom: 10rem;
+        width: 4px;
+        background: linear-gradient(to bottom, #14b8a6, #3b82f6);
+        border-radius: 10px;
+        z-index: 1;
+    }
+
+    .academic-card {
+        padding: 1.5rem;
+        border-radius: 20px;
+    }
+
+    .degree-title {
+        font-size: 1.25rem;
+    }
+
+    .stage-row {
+        padding-left: 2rem;
+    }
+}
+
 @media (max-width: 1024px) {
-    .roadmap-container.neon-void-mode {
+    .roadmap-container.academic-mode {
         flex-direction: column;
     }
 
     .roadmap-sidebar {
         width: 100%;
-        height: auto;
         padding: 1.25rem;
         border-right: none;
-        border-bottom: 1px solid var(--border);
-        background: #000;
-        position: relative;
+        border-bottom: 1px solid #eee;
+        height: auto;
+        position: sticky;
+        top: 0;
     }
 
     .sidebar-header {
@@ -307,92 +457,50 @@
         justify-content: space-between;
     }
 
-    .mobile-only-title {
-        display: block;
-        font-size: 1.2rem;
-        font-weight: 800;
-        color: #fff;
-    }
-
-    .desktop-only {
-        display: none !important;
-    }
-
-    .input-group-container {
+    .academic-card-header {
         gap: 1rem;
     }
 
-    .styled-textarea {
-        padding: 0.8rem;
-        font-size: 0.95rem;
+    .icon-badge {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
     }
 
-    .neon-btn {
-        height: 50px;
-        font-size: 0.95rem;
-        border-radius: 8px;
+    .icon-badge svg {
+        width: 22px;
+        height: 22px;
     }
 
-    .loading-status-area {
-        margin-top: 1rem;
-    }
-
-    .scroll-wrapper {
-        padding: 2rem 1.25rem 6rem;
-    }
-
-    .roadmap-title {
-        font-size: 1.75rem;
-        text-align: left;
-    }
-
-    .roadmap-subtitle {
-        font-size: 0.75rem;
-        text-align: left;
-        margin-bottom: 2rem;
-    }
-
-    .timeline-container {
-        padding-left: 15px;
-        margin-left: 15px;
-    }
-
-    .roadmap-node {
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    .node-marker {
-        width: 32px;
-        height: 32px;
-        font-size: 0.8rem;
-        margin-left: -16px;
-    }
-
-    .node-card {
-        padding: 1.1rem;
-        border-radius: 10px;
-    }
-
-    .node-title {
+    .degree-title {
         font-size: 1.1rem;
     }
 
-    .resources-grid {
-        grid-template-columns: 1fr;
+    .learning-topics {
+        font-size: 0.95rem;
+    }
+
+    .avatar-portal {
+        top: 0.75rem;
+        right: 0.75rem;
+        transform: scale(0.4);
     }
 }
 
 @media (max-width: 480px) {
-    .scroll-wrapper {
-        padding: 1.5rem 1rem 5rem;
+    .academic-main-title {
+        font-size: 1.8rem;
     }
 
-    .node-card {
-        padding: 1rem;
+    .academic-hero-text {
+        font-size: 1rem;
     }
 
-    .topic-name {
-        font-size: 0.85rem;
+    .mobile-side-timeline {
+        left: 1rem;
+    }
+
+    .stage-row {
+        padding-left: 1rem;
     }
 }
