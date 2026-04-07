@@ -1,4 +1,4 @@
-/* Roadmap.css - NEON VOID THEME */
+/* Roadmap.css - CELESTIAL STITCH THEME */
 
 .roadmap-container.neon-void-mode {
     display: flex;
@@ -8,526 +8,207 @@
     color: #e2e2e2;
     font-family: 'Inter', sans-serif;
     overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 200;
 }
 
 /* Sidebar styling */
-.roadmap-container.neon-void-mode .roadmap-sidebar {
-    width: 320px;
-    background-color: #0e0e0e;
-    border-right: 1px solid #1f1f1f;
+.roadmap-container .roadmap-sidebar {
+    width: 380px;
+    background: rgba(10, 10, 10, 0.95);
+    backdrop-filter: blur(25px);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     flex-direction: column;
-    padding: 2.5rem 1.5rem;
+    padding: 3rem 2rem;
     flex-shrink: 0;
-    z-index: 100;
-    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.5);
+    z-index: 210;
+    box-shadow: 15px 0 60px rgba(0, 0, 0, 1);
 }
 
-.roadmap-container.neon-void-mode .back-button {
+.roadmap-container .back-button {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    background: transparent;
-    border: none;
-    color: #bcc9ce;
-    font-weight: 500;
-    cursor: pointer;
-    margin-bottom: 2.5rem;
-    padding: 0;
-    font-size: 0.95rem;
-    transition: all 0.2s;
-}
-
-.roadmap-container.neon-void-mode .back-button:hover {
-    color: #4cd6fb;
-    text-shadow: 0 0 8px rgba(76, 214, 251, 0.4);
-}
-
-.prompt-card {
-    display: flex;
-    flex-direction: column;
     gap: 0.75rem;
-    margin-bottom: 2rem;
-}
-
-.prompt-card label {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #bcc9ce;
     font-weight: 600;
-    font-size: 0.8rem;
-    color: #869398;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.styled-textarea {
-    width: 100%;
-    padding: 1rem;
-    border-radius: 4px;
-    border: 1px solid #3d494d;
-    font-family: 'Inter', sans-serif;
-    resize: vertical;
-    background-color: #000000;
-    color: #e2e2e2;
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-bottom: 3rem;
+    font-size: 0.9rem;
     transition: all 0.3s;
 }
 
-.styled-textarea:focus {
-    outline: none;
+.roadmap-container .back-button:hover {
+    background: rgba(255, 255, 255, 0.05);
     border-color: #4cd6fb;
-    box-shadow: 0 0 10px rgba(76, 214, 251, 0.2);
-}
-
-.steps-section h3 {
-    margin-bottom: 1.5rem;
-    font-size: 1rem;
     color: #4cd6fb;
-    font-weight: 500;
+    box-shadow: 0 0 20px rgba(76, 214, 251, 0.2);
 }
 
-.steps-list {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    font-size: 0.9rem;
+.prompt-card textarea {
+    background: #050505;
+    border: 1px solid #1f1f1f;
+    border-radius: 12px;
+    padding: 1.25rem;
+    color: #fff;
+    font-size: 0.95rem;
+    transition: 0.3s;
+    outline: none;
 }
 
-.steps-list li {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.steps-list li.pending {
-    color: #869398;
-}
-
-.steps-list li.active {
-    color: #f72585;
-    font-weight: 500;
-    text-shadow: 0 0 10px rgba(247, 37, 133, 0.3);
-}
-
-.neon-tick {
-    color: #f72585;
-    font-weight: bold;
-}
-
-.void-dot {
-    color: #3d494d;
+.prompt-card textarea:focus {
+    border-color: #4cd6fb;
+    box-shadow: 0 0 15px rgba(76, 214, 251, 0.2);
 }
 
 .neon-btn {
-    width: 100%;
     background: linear-gradient(135deg, #4cd6fb, #00b4d8);
-    color: #001f27;
-    border: none;
-    padding: 1rem;
-    border-radius: 4px;
+    color: #000;
+    font-size: 1rem;
     font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    padding: 1.1rem;
+    border-radius: 12px;
+    border: none;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(76, 214, 251, 0.2);
-    transition: all 0.3s;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 10px 30px rgba(76, 214, 251, 0.3);
 }
 
 .neon-btn:hover {
-    box-shadow: 0 6px 20px rgba(76, 214, 251, 0.5);
-    transform: translateY(-2px);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 15px 45px rgba(76, 214, 251, 0.5);
 }
 
-.neon-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
-}
-
-.sidebar-footer {
-    margin-top: auto;
-}
-
-/* ═════════ MAIN CANVAS (SCROLL AREA) ═════════ */
+/* Response Area */
 .roadmap-canvas {
     flex: 1;
-    position: relative;
     overflow-y: auto;
-    overflow-x: hidden;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    background-color: #000000;
-    background-image:
-        radial-gradient(circle at 15% 50%, rgba(76, 214, 251, 0.05), transparent 25%),
-        radial-gradient(circle at 85% 30%, rgba(247, 37, 133, 0.05), transparent 25%);
-}
-
-/* Custom Scrollbar for Main Canvas */
-.roadmap-canvas::-webkit-scrollbar {
-    width: 4px;
-}
-
-.roadmap-canvas::-webkit-scrollbar-thumb {
-    background: #3d494d;
-    border-radius: 2px;
-}
-
-.empty-state {
-    margin: auto;
-    font-size: 1.1rem;
-    color: #869398;
-    display: flex;
-    align-items: center;
-    font-weight: 300;
-}
-
-.pulse-text {
-    animation: blink 2s infinite;
-}
-
-@keyframes blink {
-
-    0%,
-    100% {
-        opacity: 0.5;
-    }
-
-    50% {
-        opacity: 1;
-    }
+    position: relative;
+    background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%);
 }
 
 .scroll-wrapper {
-    padding: 5rem 4rem;
-    position: relative;
-    max-width: 1200px;
-    margin: 0 auto;
+    padding: 6rem 10%;
     width: 100%;
 }
 
 .void-main-title {
-    color: #ffffff;
-    font-weight: 600;
-    font-size: 2.5rem;
-    margin-bottom: 5rem;
-    display: flex;
-    flex-direction: column;
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #fff;
     text-align: center;
-    letter-spacing: -0.02em;
-}
-
-.void-main-title .subtitle {
-    font-size: 1rem;
-    font-weight: 400;
-    color: #4cd6fb;
-    margin-top: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
-
-/* The Straight Neon Vector Line */
-.vector-path-container {
-    position: relative;
-    padding-top: 2rem;
-    padding-bottom: 8rem;
-}
-
-.neon-vector-line {
-    position: absolute;
-    top: -4rem;
-    bottom: 0;
-    left: 50%;
-    width: 2px;
-    background: linear-gradient(to bottom, #000000, #4cd6fb 15%, #f72585 85%, #000000);
-    transform: translateX(-50%);
-    box-shadow: 0 0 15px rgba(76, 214, 251, 0.4);
-    z-index: 1;
-}
-
-/* Rows holding the nodes */
-.void-stage-row {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    position: relative;
     margin-bottom: 6rem;
-    z-index: 10;
+    background: linear-gradient(to bottom, #fff 0%, #888 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-.row-left {
-    justify-content: flex-end;
-    flex-direction: row-reverse;
+/* ═════════ MOBILE OPTIMIZATION ═════════ */
+@media (max-width: 1300px) {
+    .roadmap-sidebar {
+        width: 320px;
+    }
+
+    .scroll-wrapper {
+        padding: 4rem 5%;
+    }
 }
 
-.row-right {
-    justify-content: flex-end;
-}
-
-/* The Glowing Core on the line */
-.vector-junction {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #000000;
-    border: 2px solid #4cd6fb;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 0 15px rgba(76, 214, 251, 0.6);
-    z-index: 5;
-}
-
-.row-right .vector-junction {
-    border-color: #f72585;
-    box-shadow: 0 0 15px rgba(247, 37, 133, 0.6);
-}
-
-.junction-core {
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: #ffffff;
-}
-
-/* The connector connecting core to card */
-.holographic-connector {
-    width: 80px;
-    height: 1px;
-    background: linear-gradient(to right, rgba(76, 214, 251, 1), rgba(76, 214, 251, 0));
-    position: absolute;
-    left: calc(50% + 8px);
-    z-index: 4;
-}
-
-.row-left .holographic-connector {
-    left: auto;
-    right: calc(50% + 8px);
-    background: linear-gradient(to left, rgba(76, 214, 251, 1), rgba(76, 214, 251, 0));
-}
-
-.row-right .holographic-connector {
-    background: linear-gradient(to right, rgba(247, 37, 133, 1), rgba(247, 37, 133, 0));
-}
-
-/* The Holographic Card */
-.holographic-card {
-    width: 42%;
-    background: rgba(31, 31, 31, 0.4);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(134, 147, 152, 0.15);
-    border-radius: 8px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    position: relative;
-    z-index: 10;
-    transition: all 0.3s;
-}
-
-.row-left .holographic-card {
-    margin-right: 80px;
-}
-
-.row-right .holographic-card {
-    margin-left: 80px;
-}
-
-.holographic-card:hover {
-    background: rgba(31, 31, 31, 0.6);
-    border-color: rgba(76, 214, 251, 0.3);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(76, 214, 251, 0.05);
-}
-
-.row-right .holographic-card:hover {
-    border-color: rgba(247, 37, 133, 0.3);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(247, 37, 133, 0.05);
-}
-
-.card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid rgba(134, 147, 152, 0.1);
-}
-
-.card-title {
-    font-weight: 500;
-    font-size: 1.1rem;
-    color: #ffffff;
-}
-
-.card-index {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #4cd6fb;
-    background: rgba(76, 214, 251, 0.1);
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-}
-
-.row-right .card-index {
-    color: #f72585;
-    background: rgba(247, 37, 133, 0.1);
-}
-
-.card-body {
-    padding: 1.5rem;
-}
-
-.hologram-bullets {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.hologram-bullets li {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    color: #bcc9ce;
-    font-size: 0.9rem;
-    line-height: 1.4;
-}
-
-.holo-bullet-glow {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    margin-top: 5px;
-    flex-shrink: 0;
-    background: #869398;
-}
-
-/* Priority based bullets */
-.level-must .holo-bullet-glow {
-    background: #f72585;
-    box-shadow: 0 0 8px #f72585;
-}
-
-.level-good .holo-bullet-glow {
-    background: #4cd6fb;
-    box-shadow: 0 0 8px #4cd6fb;
-}
-
-.level-suggested .holo-bullet-glow {
-    background: #869398;
-}
-
-.holo-text {
-    flex: 1;
-}
-
-.holo-link {
-    color: #3d494d;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-}
-
-.holo-link:hover {
-    color: #4cd6fb;
-    filter: drop-shadow(0 0 5px #4cd6fb);
-}
-
-/* Custom Scrollbar for external links grid area? No, just external resources container */
-.void-resources-container {
-    margin-top: 2rem;
-    padding: 2.5rem;
-    background: rgba(14, 14, 14, 0.8);
-    border: 1px solid #1f1f1f;
-    border-radius: 8px;
-}
-
-.void-resources-container h3 {
-    font-weight: 500;
-    color: #ffffff;
-    margin-bottom: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.void-links-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
-}
-
-.void-resource-card {
-    display: flex;
-    align-items: center;
-    padding: 1rem;
-    border-radius: 4px;
-    background: rgba(31, 31, 31, 0.4);
-    border: 1px solid #1f1f1f;
-    text-decoration: none;
-    color: #4cd6fb;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-}
-
-.void-resource-card:hover {
-    background: rgba(76, 214, 251, 0.05);
-    border-color: rgba(76, 214, 251, 0.3);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-.truncate {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-}
-
-/* Responsiveness */
 @media (max-width: 1024px) {
     .roadmap-container.neon-void-mode {
         flex-direction: column;
     }
 
-    .roadmap-container.neon-void-mode .roadmap-sidebar {
+    .roadmap-container .roadmap-sidebar {
         width: 100%;
         padding: 1.5rem;
+        height: auto;
         border-right: none;
-        border-bottom: 1px solid #1f1f1f;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .back-button {
+        margin-bottom: 1.5rem;
     }
 
     .scroll-wrapper {
-        padding: 2rem 1.5rem;
+        padding: 3rem 1.5rem;
+    }
+
+    .void-main-title {
+        font-size: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    /* Nodes layout for mobile */
+    .void-stage-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        margin-bottom: 3rem;
     }
 
     .neon-vector-line {
-        left: 1rem;
+        left: 20px;
         transform: none;
     }
 
-    .void-stage-row {
-        flex-direction: column !important;
-        align-items: flex-start;
-        margin-bottom: 4rem;
-    }
-
-    .row-left .holographic-card,
-    .row-right .holographic-card {
-        width: calc(100% - 3rem);
-        margin-left: 3rem !important;
-        margin-right: 0 !important;
-    }
-
     .vector-junction {
-        left: 1rem;
+        left: 20px;
         transform: translateX(-50%);
+    }
+
+    .holographic-card {
+        width: calc(100% - 40px) !important;
+        margin-left: 40px !important;
+        margin-right: 0 !important;
+        padding: 0;
+        border-radius: 12px;
     }
 
     .holographic-connector {
         display: none;
     }
+}
+
+@media (max-width: 640px) {
+    .void-main-title {
+        font-size: 1.5rem;
+    }
+
+    .card-header {
+        padding: 1rem;
+    }
+
+    .card-title {
+        font-size: 0.9rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .hologram-bullets li {
+        font-size: 0.8rem;
+    }
+}
+
+/* ═════════ ADDITIONAL EFFECTS ═════════ */
+.holographic-card {
+    background: rgba(18, 18, 18, 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.holographic-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(76, 214, 251, 0.4);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 20px rgba(76, 214, 251, 0.1);
 }
