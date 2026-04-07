@@ -70,26 +70,46 @@ export default function Roadmap({ onBack }) {
 
             {/* Configuration Sidebar */}
             <aside className="roadmap-sidebar">
-                <button className="back-button" onClick={onBack}>
-                    <ArrowLeft size={18} />
-                    <span>Exit Interface</span>
-                </button>
 
-                <div className="prompt-card">
-                    <label>Target Domain:</label>
+                {/* Mobile header row (back + title) */}
+                <div className="mobile-header-row">
+                    <button className="back-button" onClick={onBack}>
+                        <ArrowLeft size={16} />
+                    </button>
+                    <span style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: '#ccc', letterSpacing: '0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {prompt || 'Roadmap Interface'}
+                    </span>
+                    <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#4cd6fb', background: 'rgba(76,214,251,0.07)', border: '1px solid rgba(76,214,251,0.18)', padding: '3px 8px', borderRadius: '20px' }}>
+                        VOID v2
+                    </span>
+                </div>
+
+                {/* Inline input + generate button */}
+                <div className="mobile-input-row">
                     <textarea
                         className="styled-textarea"
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
                         disabled={isLoading}
-                        rows={2}
+                        rows={1}
                         placeholder="e.g., Python Architecture..."
                     />
+                    <button
+                        className="neon-btn"
+                        onClick={generateRoadmap}
+                        disabled={isLoading}
+                    >
+                        {isLoading
+                            ? <Loader2 className="spin" size={16} />
+                            : <><Compass size={14} /> Generate</>
+                        }
+                    </button>
                 </div>
 
+                {/* Loading steps (compact pills row) */}
                 {isLoading && (
                     <div className="steps-section">
-                        <h3>Booting Sequence...</h3>
+                        <h3>Booting sequence</h3>
                         <ul className="steps-list">
                             {STEPS_LIST.map((step, idx) => (
                                 <li key={idx} className={idx <= activeStep ? 'active' : 'pending'}>
@@ -101,15 +121,13 @@ export default function Roadmap({ onBack }) {
                     </div>
                 )}
 
+                {/* Desktop-only footer button (hidden on mobile via CSS) */}
                 <div className="sidebar-footer">
-                    <button
-                        className="create-content-btn neon-btn"
-                        onClick={generateRoadmap}
-                        disabled={isLoading}
-                    >
+                    <button className="create-content-btn neon-btn" onClick={generateRoadmap} disabled={isLoading}>
                         {isLoading ? <Loader2 className="spin" size={20} /> : <><Compass size={18} /> Initiate Sequence</>}
                     </button>
                 </div>
+
             </aside>
 
             {/* Main Canvas with Scrolling Vector Map */}

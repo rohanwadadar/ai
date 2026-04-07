@@ -229,80 +229,223 @@
         flex-direction: column;
     }
 
+    /* ── Compact sticky header ── */
     .roadmap-container .roadmap-sidebar {
         width: 100%;
-        padding: 1rem;
+        padding: 0;
         border-right: none;
-        border-bottom: 1px solid #222;
-        background: rgba(10, 10, 10, 0.98);
+        border-bottom: 1px solid #1a1a1a;
+        background: rgba(8, 8, 8, 0.98);
+        backdrop-filter: blur(12px);
+        flex-shrink: 0;
     }
 
-    .back-button {
-        margin-bottom: 1rem;
-        width: 100%;
+    /* Header row: back btn + title + badge */
+    .mobile-header-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-bottom: 1px solid #151515;
+    }
+
+    .roadmap-container .back-button {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border-radius: 50%;
+        margin-bottom: 0;
         justify-content: center;
+        flex-shrink: 0;
     }
 
-    .prompt-card {
-        margin-bottom: 1rem;
+    /* Inline compact input row */
+    .mobile-input-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 14px;
     }
 
-    .styled-textarea {
-        padding: 0.75rem;
-        font-size: 0.9rem;
+    .mobile-input-row .styled-textarea {
+        flex: 1;
+        padding: 8px 11px;
+        font-size: 13px;
+        border-radius: 10px;
+        resize: none;
     }
 
+    .mobile-input-row .neon-btn {
+        padding: 0 14px;
+        height: 38px;
+        border-radius: 10px;
+        font-size: 12px;
+        letter-spacing: 0.03em;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* Steps section stays under the row */
+    .steps-section {
+        padding: 8px 14px 12px;
+        border-top: 1px solid #151515;
+    }
+
+    .steps-section h3 {
+        font-size: 10px;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 6px;
+    }
+
+    .steps-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .steps-list li {
+        font-size: 11px;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .steps-list li.active {
+        color: #4cd6fb;
+    }
+
+    .sidebar-footer {
+        display: none;
+        /* button moved into mobile-input-row */
+    }
+
+    /* ── Canvas ── */
     .roadmap-canvas {
         height: 100%;
+        overflow-y: auto;
     }
 
     .scroll-wrapper {
-        padding: 2rem 1rem 5rem;
+        padding: 22px 14px 80px;
+        max-width: 100%;
     }
 
     .void-main-title {
-        font-size: 1.5rem;
-        margin-bottom: 3rem;
+        font-size: 1.35rem;
+        margin-bottom: 26px;
+        line-height: 1.25;
+    }
+
+    .void-main-title .subtitle {
+        font-size: 0.68rem;
+        letter-spacing: 3px;
+        margin-top: 6px;
+    }
+
+    /* ── Mobile timeline: single left rail ── */
+    .vector-path-container {
+        padding-left: 24px;
     }
 
     .neon-vector-line {
-        left: 20px;
+        left: 5px;
+        width: 1.5px;
         transform: none;
+        opacity: 0.6;
     }
 
+    /* All cards: full width, left-aligned, no alternating */
     .void-stage-row {
         flex-direction: column !important;
         align-items: flex-start !important;
-        padding-left: 45px;
-        margin-bottom: 3rem;
+        padding-left: 0;
+        margin-bottom: 18px;
     }
 
     .vector-junction {
-        left: 20px;
-        transform: translateX(-50%);
+        left: -19px;
+        top: 14px;
+        transform: none;
+        width: 9px;
+        height: 9px;
     }
 
     .holographic-card {
         width: 100%;
-        padding: 1.25rem;
+        padding: 13px 13px 11px;
+        border-radius: 13px;
+    }
+
+    .holographic-card:hover {
+        transform: none;
+        /* disable hover lift on touch */
+    }
+
+    .card-header {
+        margin-bottom: 8px;
     }
 
     .card-title {
-        font-size: 1rem;
+        font-size: 13px;
+        line-height: 1.35;
+    }
+
+    .card-index {
+        font-size: 11px;
+        opacity: 0.7;
+    }
+
+    .hologram-bullets li {
+        font-size: 12px;
+        margin-bottom: 5px;
+        line-height: 1.4;
+    }
+
+    /* Resources grid: single column */
+    .void-resources-container {
+        margin-top: 22px;
+        padding-top: 18px;
+        border-top: 1px solid #151515;
+    }
+
+    .void-resources-container h3 {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #555;
+        margin-bottom: 10px;
+    }
+
+    .void-links-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .void-resource-card {
+        padding: 9px 12px;
+        border-radius: 9px;
+        font-size: 12px;
     }
 }
 
 @media (max-width: 480px) {
     .scroll-wrapper {
-        padding: 1.5rem 0.5rem 6rem;
+        padding: 18px 12px 80px;
     }
 
-    .void-stage-row {
-        padding-left: 35px;
+    .void-main-title {
+        font-size: 1.2rem;
     }
 
-    .neon-vector-line,
+    .neon-vector-line {
+        left: 5px;
+    }
+
     .vector-junction {
-        left: 15px;
+        left: -17px;
     }
 }
