@@ -1,260 +1,313 @@
-/* CodeBlock.css — Live Code Execution with Neon Terminal UI */
+/* CodeBlock.css — Premium Live Code Editor + Neon Terminal UI */
 
-/* ═══════════════════════════════════════════════════════
-   ROOT WRAPPER
-═══════════════════════════════════════════════════════ */
-.code-block-root {
+/* ═══════════════════════════════════════════════════
+   ROOT
+═══════════════════════════════════════════════════ */
+.cb-root {
     width: 100%;
-    border-radius: 12px;
+    border-radius: 14px;
     overflow: hidden;
-    border: 1px solid #1e1e1e;
-    background: #0a0a0a;
-    margin: 0.75rem 0;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    border: 1px solid #1f1f1f;
+    margin: 1rem 0;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+    background: #0d0d0d;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
 }
 
-/* ═══════════════════════════════════════════════════════
-   HEADER BAR
-═══════════════════════════════════════════════════════ */
-.code-block-header {
+/* ═══════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════ */
+.cb-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.55rem 0.85rem;
+    padding: 0.6rem 0.9rem;
     background: #111;
-    border-bottom: 1px solid #1e1e1e;
+    border-bottom: 1px solid #1f1f1f;
     gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
-.code-block-lang {
+.cb-lang-info {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.55rem;
 }
 
-.lang-dot {
+.cb-lang-dot {
     width: 9px;
     height: 9px;
     border-radius: 50%;
     flex-shrink: 0;
+    box-shadow: 0 0 6px currentColor;
 }
 
-.lang-dot-python,
-.lang-dot-py {
-    background: #4584b6;
-}
-
-.lang-dot-javascript,
-.lang-dot-js {
-    background: #f7df1e;
-}
-
-.lang-dot-html {
-    background: #e96228;
-}
-
-.lang-dot-css {
-    background: #2965f1;
-}
-
-.lang-dot-bash,
-.lang-dot-shell,
-.lang-dot-sh {
-    background: #89e051;
-}
-
-.lang-dot-json {
-    background: #c678dd;
-}
-
-.lang-dot-sql {
-    background: #ff6b6b;
-}
-
-.lang-dot-text {
-    background: #444;
-}
-
-.lang-label {
-    font-size: 0.72rem;
+.cb-lang-label {
+    font-size: 0.7rem;
     color: #555;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    letter-spacing: 1.2px;
-    font-family: inherit;
 }
 
-/* Action buttons group */
-.code-block-actions {
+.cb-edit-badge {
+    font-size: 0.65rem;
+    background: rgba(255, 189, 46, 0.12);
+    border: 1px solid rgba(255, 189, 46, 0.3);
+    color: #ffbd2e;
+    padding: 0.15rem 0.55rem;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════
+   BUTTON GROUP
+═══════════════════════════════════════════════════ */
+.cb-actions {
     display: flex;
     gap: 0.4rem;
     align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Base button style */
+.cb-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.32rem 0.75rem;
+    border-radius: 7px;
+    border: 1px solid #222;
+    background: transparent;
+    color: #555;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
 }
 
 /* Run button */
-.run-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.85rem;
-    border-radius: 6px;
-    border: 1px solid rgba(76, 214, 251, 0.3);
-    background: rgba(76, 214, 251, 0.08);
+.cb-run-btn {
+    border-color: rgba(76, 214, 251, 0.25);
+    background: rgba(76, 214, 251, 0.06);
     color: #4cd6fb;
-    font-size: 0.73rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: inherit;
 }
 
-.run-btn:hover:not(:disabled) {
-    background: rgba(76, 214, 251, 0.18);
+.cb-run-btn:hover:not(:disabled) {
+    background: rgba(76, 214, 251, 0.14);
     border-color: #4cd6fb;
-    box-shadow: 0 0 12px rgba(76, 214, 251, 0.2);
+    box-shadow: 0 0 14px rgba(76, 214, 251, 0.2);
 }
 
-.run-btn.running,
-.run-btn:disabled {
-    opacity: 0.6;
+.cb-run-btn.running,
+.cb-run-btn:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
-.run-spinner {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border: 2px solid rgba(76, 214, 251, 0.3);
-    border-top-color: #4cd6fb;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+/* Edit button */
+.cb-edit-btn {
+    color: #888;
 }
 
-@keyframes spin {
+.cb-edit-btn:hover {
+    border-color: #ffbd2e;
+    color: #ffbd2e;
+}
+
+.cb-edit-btn.active {
+    border-color: rgba(255, 189, 46, 0.4);
+    color: #ffbd2e;
+    background: rgba(255, 189, 46, 0.06);
+}
+
+/* Copy button */
+.cb-copy-btn:hover {
+    border-color: #333;
+    color: #aaa;
+}
+
+/* Reset button */
+.cb-reset-btn {
+    color: #888;
+}
+
+.cb-reset-btn:hover {
+    border-color: #ff5f57;
+    color: #ff5f57;
+}
+
+/* Running spinner */
+.cb-spinner {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border: 2px solid rgba(76, 214, 251, 0.25);
+    border-top-color: #4cd6fb;
+    border-radius: 50%;
+    animation: cb-spin 0.65s linear infinite;
+}
+
+@keyframes cb-spin {
     to {
         transform: rotate(360deg);
     }
 }
 
-/* Copy button */
-.copy-btn {
-    padding: 0.35rem 0.75rem;
-    border-radius: 6px;
-    border: 1px solid #1e1e1e;
-    background: transparent;
-    color: #444;
-    font-size: 0.73rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: inherit;
-}
-
-.copy-btn:hover {
-    border-color: #333;
-    color: #888;
-}
-
-/* ═══════════════════════════════════════════════════════
-   CODE BODY
-═══════════════════════════════════════════════════════ */
-.code-block-body {
+/* ═══════════════════════════════════════════════════
+   STATIC CODE VIEW
+═══════════════════════════════════════════════════ */
+.cb-code-view {
     overflow-x: auto;
-    background: #0a0a0a;
+    background: #0d0d0d;
 }
 
-.code-block-body pre {
+.cb-code-view pre {
     margin: 0;
-    padding: 1rem 1.1rem;
+    padding: 1.1rem 1.2rem;
 }
 
-.code-block-body code {
+.cb-code-view code {
     font-family: inherit;
-    font-size: 0.85rem;
-    color: #c9d1d9;
-    line-height: 1.7;
+    font-size: 0.84rem;
+    color: #abb2bf;
+    line-height: 1.75;
     white-space: pre;
+    display: block;
 }
 
-/* ═══════════════════════════════════════════════════════
+/* Scrollbar for code view */
+.cb-code-view::-webkit-scrollbar {
+    height: 4px;
+}
+
+.cb-code-view::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cb-code-view::-webkit-scrollbar-thumb {
+    background: #222;
+    border-radius: 4px;
+}
+
+/* ═══════════════════════════════════════════════════
+   EDIT MODE
+═══════════════════════════════════════════════════ */
+.cb-editor-wrap {
+    background: #080808;
+    border-top: 1px solid #1a1a1a;
+}
+
+.cb-editor-hint {
+    padding: 0.65rem 1.1rem;
+    font-size: 0.75rem;
+    color: #3a3a3a;
+    border-bottom: 1px solid #141414;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+}
+
+.cb-editor-hint strong {
+    color: #555;
+}
+
+.cb-textarea {
+    width: 100%;
+    background: #080808;
+    color: #abb2bf;
+    border: none;
+    padding: 1.1rem 1.2rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.84rem;
+    line-height: 1.75;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+    min-height: 120px;
+    caret-color: #4cd6fb;
+    tab-size: 4;
+}
+
+.cb-textarea:focus {
+    box-shadow: inset 0 0 0 1px rgba(76, 214, 251, 0.15);
+}
+
+/* ═══════════════════════════════════════════════════
+   PRACTICE HINT BANNER
+═══════════════════════════════════════════════════ */
+.cb-practice-hint {
+    padding: 0.5rem 1.1rem;
+    background: #0a0a0a;
+    border-top: 1px solid #141414;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    color: #2a2a2a;
+    line-height: 1.5;
+}
+
+.cb-practice-hint strong {
+    color: #3a3a3a;
+}
+
+/* ═══════════════════════════════════════════════════
    NEON TERMINAL PANEL
-═══════════════════════════════════════════════════════ */
-.terminal-root {
-    border-top: 1px solid #1e1e1e;
+═══════════════════════════════════════════════════ */
+.cb-terminal {
+    border-top: 1px solid #1a1a1a;
 }
 
-.terminal-root.success .terminal-titlebar {
-    border-bottom-color: rgba(76, 214, 251, 0.2);
-}
-
-.terminal-root.error .terminal-titlebar {
-    border-bottom-color: rgba(255, 80, 80, 0.2);
-}
-
-.terminal-root.running .terminal-titlebar {
-    border-bottom-color: rgba(250, 200, 50, 0.2);
-}
-
-/* Title bar — macOS-style */
-.terminal-titlebar {
+/* Terminal titlebar */
+.cb-term-bar {
     display: flex;
     align-items: center;
     padding: 0.45rem 0.85rem;
-    background: #0d0d0d;
-    border-bottom: 1px solid #1a1a1a;
+    background: #0a0a0a;
+    border-bottom: 1px solid #161616;
     gap: 0.5rem;
 }
 
-.terminal-dots {
+.cb-term-dots {
     display: flex;
     gap: 5px;
     align-items: center;
 }
 
-.t-dot {
+.cb-term-dots span {
     width: 10px;
     height: 10px;
     border-radius: 50%;
+    display: block;
 }
 
-.t-dot.red {
-    background: #ff5f57;
-}
-
-.t-dot.yellow {
-    background: #ffbd2e;
-}
-
-.t-dot.green {
-    background: #28c840;
-}
-
-.terminal-title {
+.cb-term-title {
     flex: 1;
     text-align: center;
-    font-size: 0.68rem;
+    font-size: 0.67rem;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
     font-family: inherit;
 }
 
-.terminal-root.success .terminal-title {
+.cb-term-success .cb-term-title {
     color: #4cd6fb;
 }
 
-.terminal-root.error .terminal-title {
+.cb-term-error .cb-term-title {
     color: #ff5555;
 }
 
-.terminal-root.running .terminal-title {
+.cb-term-running .cb-term-title {
     color: #f1c40f;
-    animation: pulse-text 1s ease infinite alternate;
+    animation: cb-pulse 1s ease infinite alternate;
 }
 
-@keyframes pulse-text {
+@keyframes cb-pulse {
     from {
-        opacity: 0.5;
+        opacity: 0.4;
     }
 
     to {
@@ -262,102 +315,98 @@
     }
 }
 
-.terminal-actions {
-    display: flex;
-    gap: 0.35rem;
-}
-
-.terminal-toggle,
-.terminal-clear {
+.cb-term-btn {
     background: transparent;
     border: none;
-    color: #333;
+    color: #2a2a2a;
     font-size: 0.7rem;
     cursor: pointer;
     padding: 0.15rem 0.35rem;
     border-radius: 4px;
-    transition: all 0.15s;
+    transition: color 0.15s;
     font-family: inherit;
 }
 
-.terminal-toggle:hover {
+.cb-term-btn:hover {
     color: #aaa;
 }
 
-.terminal-clear:hover {
-    color: #ff5555;
+.cb-term-close:hover {
+    color: #ff5f57;
 }
 
-/* Output area */
-.terminal-output {
-    padding: 1rem 1.1rem;
-    background: #060606;
-    min-height: 50px;
-    max-height: 350px;
+/* Output body */
+.cb-term-out {
+    padding: 1rem 1.2rem;
+    background: #050505;
+    min-height: 48px;
+    max-height: 320px;
     overflow-y: auto;
 }
 
-.terminal-output pre {
+.cb-term-out pre {
     margin: 0;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: inherit;
     font-size: 0.82rem;
-    line-height: 1.7;
+    line-height: 1.75;
     white-space: pre-wrap;
     word-break: break-word;
 }
 
-.terminal-root.success .terminal-output pre {
+.cb-term-success .cb-term-out pre {
     color: #7ee787;
 }
 
-.terminal-root.error .terminal-output pre {
+.cb-term-error .cb-term-out pre {
     color: #ff7070;
 }
 
-.terminal-root.running .terminal-output pre {
+.cb-term-running .cb-term-out pre {
     color: #f1c40f;
 }
 
-/* Custom neon scrollbar for terminal */
-.terminal-output::-webkit-scrollbar {
+/* Terminal scrollbar */
+.cb-term-out::-webkit-scrollbar {
     width: 4px;
 }
 
-.terminal-output::-webkit-scrollbar-track {
+.cb-term-out::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.terminal-output::-webkit-scrollbar-thumb {
-    background: #1e1e1e;
+.cb-term-out::-webkit-scrollbar-thumb {
+    background: #1a1a1a;
     border-radius: 4px;
 }
 
-/* ═══════════════════════════════════════════════════════
-   OVERRIDE: hide duplicate pre inside markdown-body
-   (We already wrap the code in our own pre)
-═══════════════════════════════════════════════════════ */
-.markdown-body .code-block-root pre {
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
+/* ═══════════════════════════════════════════════════
+   FIX: prevent outer markdown-body from re-styling our pre
+═══════════════════════════════════════════════════ */
+.markdown-body .cb-root pre {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
 }
 
-/* ═══════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    RESPONSIVE
-═══════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 @media (max-width: 500px) {
-    .run-btn {
-        padding: 0.3rem 0.6rem;
+
+    .cb-run-btn,
+    .cb-edit-btn,
+    .cb-copy-btn {
+        padding: 0.28rem 0.55rem;
         font-size: 0.65rem;
     }
 
-    .copy-btn {
-        padding: 0.3rem 0.55rem;
-        font-size: 0.65rem;
+    .cb-lang-label {
+        display: none;
     }
 
-    .lang-label {
+    .cb-practice-hint {
         display: none;
     }
 }
