@@ -503,8 +503,12 @@ function App() {
                       <ReactMarkdown
                         components={{
                           code({ node, inline, className, children, ...props }) {
-                            if (inline) {
-                              return <code className={className} {...props}>{children}</code>;
+                            // In newer react-markdown, 'inline' may be undefined.
+                            // Detect inline code by checking if it has no newlines.
+                            const codeStr = String(children);
+                            const isInline = inline || !codeStr.includes('\n');
+                            if (isInline) {
+                              return <code className={className} style={{ background: 'rgba(255,255,255,0.06)', padding: '0.15em 0.45em', borderRadius: '5px', fontSize: '0.85em', fontFamily: 'monospace' }} {...props}>{children}</code>;
                             }
                             return <CodeBlock className={className}>{children}</CodeBlock>;
                           }
