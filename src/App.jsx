@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import './index.css';
 import Roadmap from './Roadmap';
+import FlashCards from './FlashCards';
 
 /* ═══════════════════════════════════════════════════════
    ERROR BOUNDARY
@@ -35,6 +36,12 @@ function SuggestLoader() {
 function isMcqRequest(text) {
   const lower = text.toLowerCase();
   const keywords = ['mcq', 'quiz', 'exam', 'test me', 'multiple choice', 'questions on', 'question on'];
+  return keywords.some(kw => lower.includes(kw));
+}
+
+function isFlashcardRequest(text) {
+  const lower = text.toLowerCase();
+  const keywords = ['flashcard', 'flash card', 'flash-card', 'spaced repetition', 'generate cards on', 'make cards on', 'study cards'];
   return keywords.some(kw => lower.includes(kw));
 }
 
@@ -338,8 +345,13 @@ function App() {
     setIsTyping(true);
 
     try {
-      const mcqMode = isMcqRequest(userMessage);
-      const endpoint = mcqMode ? `${API_BASE}/api/mcq` : `${API_BASE}/api/chat`;
+      const flashMode = isFlashcardRequest(userMessage);
+      const mcqMode = !flashMode && isMcqRequest(userMessage);
+      const endpoint = flashMode
+        ? `${API_BASE}/api/flashcards`
+        : mcqMode
+          ? `${API_BASE}/api/mcq`
+          : `${API_BASE}/api/chat`;
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -355,7 +367,10 @@ function App() {
 
       const data = await response.json();
 
-      if (mcqMode && data.mcq && Array.isArray(data.questions)) {
+      if (flashMode && data.flashcards && Array.isArray(data.cards)) {
+        setMessages(prev => [...prev, { role: 'bot', text: '', flashcards: data }]);
+        setIsTyping(false);
+      } else if (mcqMode && data.mcq && Array.isArray(data.questions)) {
         setMessages(prev => [...prev, { role: 'bot', text: '', mcq: data }]);
         setIsTyping(false);
       } else {
@@ -477,7 +492,9 @@ function App() {
           {messages.map((msg, idx) => (
             <div key={idx} className={`message ${msg.role}-message`}>
               {msg.role === 'bot' ? (
-                msg.mcq ? (
+                msg.flashcards ? (
+                  <FlashCards data={msg.flashcards} />
+                ) : msg.mcq ? (
                   <McqQuiz data={msg.mcq} />
                 ) : (
                   <div className="message-content markdown-body">

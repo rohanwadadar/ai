@@ -1,0 +1,425 @@
+/* FlashCards.css — 3D Holographic Flip Deck */
+
+/* ══════════════════════════════════════════════
+   ROOT DECK CONTAINER
+══════════════════════════════════════════════ */
+.flashdeck-root {
+    width: 100%;
+    max-width: 860px;
+    margin: 0.5rem 0;
+    font-family: 'Inter', 'Outfit', sans-serif;
+}
+
+/* ══════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════ */
+.flashdeck-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.flashdeck-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.flashdeck-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.flashdeck-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e2e2e2;
+    margin: 0 0 0.15rem;
+}
+
+.flashdeck-subtitle {
+    font-size: 0.75rem;
+    color: #444;
+    font-weight: 500;
+}
+
+/* Mode toggle buttons */
+.flashdeck-mode-toggle {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.mode-btn {
+    padding: 0.45rem 0.85rem;
+    border: 1px solid #1f1f1f;
+    border-radius: 8px;
+    background: transparent;
+    color: #555;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.mode-btn:hover {
+    border-color: #333;
+    color: #bbb;
+}
+
+.mode-btn.active {
+    background: rgba(76, 214, 251, 0.08);
+    border-color: rgba(76, 214, 251, 0.3);
+    color: #4cd6fb;
+}
+
+/* ══════════════════════════════════════════════
+   PROGRESS BAR (focus mode)
+══════════════════════════════════════════════ */
+.flashdeck-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.flashdeck-progress-track {
+    flex: 1;
+    height: 3px;
+    background: #111;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.flashdeck-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4cd6fb, #7c3aed);
+    border-radius: 10px;
+    transition: width 0.4s ease;
+}
+
+.flashdeck-progress-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #333;
+    white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════
+   GRID MODE
+══════════════════════════════════════════════ */
+.flashdeck-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+/* ══════════════════════════════════════════════
+   THE 3D CARD SCENE (perspective wrapper)
+══════════════════════════════════════════════ */
+.flashcard-scene {
+    width: 100%;
+    perspective: 1200px;
+    height: 180px;
+    cursor: pointer;
+}
+
+/* Inner wrapper that actually rotates */
+.flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
+    border-radius: 18px;
+}
+
+.flashcard-inner.flipped {
+    transform: rotateY(180deg);
+}
+
+/* ══════════════════════════════════════════════
+   BOTH FACES — SHARED STYLES
+══════════════════════════════════════════════ */
+.flashcard-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    overflow: hidden;
+}
+
+/* Accent glow top line using CSS variable from JS */
+.flashcard-face::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--card-accent, #4cd6fb);
+    border-radius: 18px 18px 0 0;
+    opacity: 0.85;
+}
+
+/* Corner ambient glow */
+.flashcard-face::after {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, var(--card-accent, #4cd6fb), transparent 70%);
+    opacity: 0.06;
+    pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════
+   FRONT FACE
+══════════════════════════════════════════════ */
+.flashcard-front {
+    background: rgba(14, 14, 14, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transform: rotateY(0deg);
+}
+
+.flashcard-front:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.flashcard-num {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #2a2a2a;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.flashcard-front-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.flashcard-front-icon {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--card-accent, #4cd6fb);
+    line-height: 1;
+    opacity: 0.7;
+}
+
+.flashcard-front-text {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #e0e0e0;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ══════════════════════════════════════════════
+   BACK FACE
+══════════════════════════════════════════════ */
+.flashcard-back {
+    background: rgba(10, 12, 16, 0.98);
+    border: 1px solid var(--card-accent, #4cd6fb);
+    transform: rotateY(180deg);
+    box-shadow: 0 0 30px rgba(76, 214, 251, 0.06);
+}
+
+.flashcard-back-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.flashcard-back-icon {
+    font-size: 1rem;
+    color: var(--card-accent, #4cd6fb);
+    opacity: 0.8;
+}
+
+.flashcard-back-text {
+    font-size: 0.82rem;
+    color: #bbb;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Tap hint at the bottom of each face */
+.flashcard-tap-hint {
+    font-size: 0.62rem;
+    color: #2a2a2a;
+    font-weight: 500;
+    text-align: right;
+    letter-spacing: 0.5px;
+    margin-top: 0.5rem;
+}
+
+/* ══════════════════════════════════════════════
+   FOCUS / STUDY MODE
+══════════════════════════════════════════════ */
+.flashdeck-focus {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: center;
+}
+
+.focus-card-scene {
+    width: 100%;
+    max-width: 560px;
+    perspective: 1400px;
+    height: 280px;
+    cursor: pointer;
+}
+
+.focus-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
+    border-radius: 22px;
+}
+
+.focus-card-inner.flipped {
+    transform: rotateY(180deg);
+}
+
+.focus-face {
+    border-radius: 22px;
+    padding: 2rem;
+}
+
+.focus-face .flashcard-front-text {
+    font-size: 1.15rem;
+    line-height: 1.5;
+}
+
+.focus-face .flashcard-back-text {
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+
+.focus-face .flashcard-front-icon {
+    font-size: 2rem;
+}
+
+.focus-face .flashcard-back-icon {
+    font-size: 1.3rem;
+}
+
+/* Navigation row */
+.focus-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    max-width: 560px;
+}
+
+.focus-nav-btn {
+    padding: 0.65rem 1.4rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #1a1a1a;
+    color: #666;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.focus-nav-btn:hover:not(:disabled) {
+    border-color: #4cd6fb;
+    color: #4cd6fb;
+    background: rgba(76, 214, 251, 0.05);
+}
+
+.focus-nav-btn:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+
+.focus-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 300px;
+}
+
+.focus-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.focus-dot.active {
+    background: #4cd6fb;
+    box-shadow: 0 0 8px rgba(76, 214, 251, 0.5);
+    transform: scale(1.3);
+}
+
+.focus-dot:hover:not(.active) {
+    background: #333;
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════ */
+@media (max-width: 600px) {
+    .flashdeck-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .flashcard-scene {
+        height: 160px;
+    }
+
+    .flashcard-front-text {
+        font-size: 0.8rem;
+    }
+
+    .flashcard-back-text {
+        font-size: 0.75rem;
+    }
+
+    .focus-card-scene {
+        height: 240px;
+    }
+
+    .flashdeck-header {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .flashdeck-grid {
+        grid-template-columns: 1fr;
+    }
+}
