@@ -560,6 +560,20 @@ function App() {
                     <p>Test your knowledge with real-time scoring and review.</p>
                   </div>
                 </div>
+                <div className="feature-card" onClick={() => setInput("Write a Python function to check if a number is prime")}>
+                  <div className="feature-card-icon">💻</div>
+                  <div className="feature-card-content">
+                    <h4>Live Code Editor</h4>
+                    <p>Generate, edit, and run Python/JS code directly in chat!</p>
+                  </div>
+                </div>
+                <div className="feature-card" onClick={() => setInput("What is the weather in Kolkata today?")}>
+                  <div className="feature-card-icon">🌐</div>
+                  <div className="feature-card-content">
+                    <h4>Live Web Search</h4>
+                    <p>Real-time internet access for up-to-date answers.</p>
+                  </div>
+                </div>
                 <div className="feature-card" onClick={() => setInput("Can you act as a Senior Web Developer and review my code?")}>
                   <div className="feature-card-icon">👩‍💻</div>
                   <div className="feature-card-content">
