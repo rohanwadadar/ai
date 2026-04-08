@@ -189,7 +189,7 @@ const relTime = (ts) => {
 ═══════════════════════════════════════════════════════ */
 const WELCOME_MSG = {
   role: 'bot',
-  text: "Hello! I'm **Lumina AI**, powered by Llama 3.1 via Groq. I remember our conversation for this session!\n\nAsk me anything — or try:\n- **\"Give me 5 MCQ on JavaScript\"** for a quiz\n- **\"Explain recursion\"** for a detailed answer"
+  text: "Hello! I'm **Lumina AI**, powered by Llama 3.1 via Groq. How can I help you learn today?"
 };
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -508,6 +508,43 @@ function App() {
               )}
             </div>
           ))}
+
+          {/* ── Initial Feature Guide ── */}
+          {messages.length === 1 && !isTyping && (
+            <div className="feature-guide-container animate-mcq">
+              <h3 className="feature-guide-title">✨ What I can do for you</h3>
+              <div className="feature-guide-grid">
+                <div className="feature-card" onClick={() => setInput("Generate a learning roadmap on Machine Learning")}>
+                  <div className="feature-card-icon">🗺️</div>
+                  <div className="feature-card-content">
+                    <h4>Learning Roadmaps</h4>
+                    <p>Structured, step-by-step paths with internet resources.</p>
+                  </div>
+                </div>
+                <div className="feature-card" onClick={() => setInput("Generate 5 flashcards on Python Basics")}>
+                  <div className="feature-card-icon">🃏</div>
+                  <div className="feature-card-content">
+                    <h4>3D Flashcards</h4>
+                    <p>Spaced-repetition study cards with flip animations.</p>
+                  </div>
+                </div>
+                <div className="feature-card" onClick={() => setInput("Give me 5 MCQ on ReactJS")}>
+                  <div className="feature-card-icon">✅</div>
+                  <div className="feature-card-content">
+                    <h4>Interactive MCQs</h4>
+                    <p>Test your knowledge with real-time scoring and review.</p>
+                  </div>
+                </div>
+                <div className="feature-card" onClick={() => setInput("Can you act as a Senior Web Developer and review my code?")}>
+                  <div className="feature-card-icon">👩‍💻</div>
+                  <div className="feature-card-content">
+                    <h4>Expert Chat</h4>
+                    <p>In-depth explanations, code generation, and tutoring.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {isTyping && !typeIntervalRef.current && (
             <div className="message bot-message typing">
