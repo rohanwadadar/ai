@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Loader2, Compass, ExternalLink, GraduationCap, Microscope, BookOpen, School, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Loader2, Compass, ExternalLink, GraduationCap, Microscope, BookOpen, School, CheckCircle2, Clock, Trash2, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import './Roadmap.css';
 import AiAvatar from './AiAvatar';
 
@@ -12,24 +12,75 @@ const STEPS_LIST = [
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-// Helper to pick an icon based on category index
+// ── Cache helpers (localStorage) ──────────────────────────────
+const CACHE_KEY = 'lumina_roadmap_cache';
+const MAX_HISTORY = 10;
+
+const normalizeKey = (str) => str.trim().toLowerCase().replace(/\s+/g, ' ');
+
+const readCache = () => {
+    try {
+        return JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
+    } catch {
+        return [];
+    }
+};
+
+const writeCache = (entries) => {
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(entries));
+    } catch {
+        // Storage full — drop oldest
+        const trimmed = entries.slice(-MAX_HISTORY + 1);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(trimmed));
+    }
+};
+
+const getCached = (prompt) => {
+    const key = normalizeKey(prompt);
+    const entries = readCache();
+    return entries.find((e) => normalizeKey(e.prompt) === key) || null;
+};
+
+const saveToCache = (prompt, data) => {
+    const key = normalizeKey(prompt);
+    let entries = readCache().filter((e) => normalizeKey(e.prompt) !== key);
+    entries.push({ prompt, data, savedAt: Date.now() });
+    if (entries.length > MAX_HISTORY) entries = entries.slice(-MAX_HISTORY);
+    writeCache(entries);
+};
+
+const deleteFromCache = (prompt) => {
+    const key = normalizeKey(prompt);
+    writeCache(readCache().filter((e) => normalizeKey(e.prompt) !== key));
+};
+
+// ── Icon / Color helpers ───────────────────────────────────────
 const getCategoryIcon = (index) => {
     const icons = [<GraduationCap size={24} />, <Microscope size={24} />, <BookOpen size={24} />, <School size={24} />, <GraduationCap size={24} />];
     return icons[index % icons.length];
 };
 
-// Helper for distinct gradient colors
-const getCategoryColor = (index) => {
-    const colors = [
-        "linear-gradient(135deg, #3b82f6, #2563eb)", // Blue
-        "linear-gradient(135deg, #14b8a6, #0d9488)", // Teal
-        "linear-gradient(135deg, #a855f7, #9333ea)", // Purple
-        "linear-gradient(135deg, #f43f5e, #e11d48)", // Rose
-        "linear-gradient(135deg, #f59e0b, #d97706)"  // Orange
-    ];
-    return colors[index % colors.length];
+const ACCENT_COLORS = [
+    "#3b82f6",  // Blue
+    "#14b8a6",  // Teal
+    "#a855f7",  // Purple
+    "#f43f5e",  // Rose
+    "#f59e0b",  // Orange
+];
+
+const getCategoryColor = (index) => ACCENT_COLORS[index % ACCENT_COLORS.length];
+
+// ── Relative time helper ───────────────────────────────────────
+const relativeTime = (ts) => {
+    const diff = (Date.now() - ts) / 1000;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
 };
 
+// ══════════════════════════════════════════════════════════════
 export default function Roadmap({ onBack }) {
     const [prompt, setPrompt] = useState('Organic Chemistry Research');
     const [roadmapData, setRoadmapData] = useState(null);
@@ -37,10 +88,30 @@ export default function Roadmap({ onBack }) {
     const [activeStep, setActiveStep] = useState(0);
     const [robotStatus, setRobotStatus] = useState('idle');
     const [robotFullScreen, setRobotFullScreen] = useState(false);
+    const [cacheHistory, setCacheHistory] = useState([]);
+    const [fromCache, setFromCache] = useState(false);
 
+    // Load history on mount
+    useEffect(() => {
+        setCacheHistory([...readCache()].reverse());
+    }, []);
+
+    const refreshHistory = () => setCacheHistory([...readCache()].reverse());
+
+    // ── Generate (cache-first) ─────────────────────────────────
     const generateRoadmap = async () => {
         if (!prompt.trim()) return;
 
+        // 1. Check cache first
+        const cached = getCached(prompt);
+        if (cached) {
+            setRoadmapData(cached.data);
+            setFromCache(true);
+            return;
+        }
+
+        // 2. Cache miss — call backend
+        setFromCache(false);
         setIsLoading(true);
         setRoadmapData(null);
         setActiveStep(0);
@@ -60,6 +131,11 @@ export default function Roadmap({ onBack }) {
 
             if (!res.ok) throw new Error("Failed");
             const data = await res.json();
+
+            // Save to cache
+            saveToCache(prompt, data);
+            refreshHistory();
+
             setRoadmapData(data);
             setRobotStatus('happy');
         } catch (err) {
@@ -72,6 +148,33 @@ export default function Roadmap({ onBack }) {
         }
     };
 
+    // ── Load a history entry ───────────────────────────────────
+    const loadFromHistory = (entry) => {
+        setPrompt(entry.prompt);
+        setRoadmapData(entry.data);
+        setFromCache(true);
+    };
+
+    // ── Delete a history entry ─────────────────────────────────
+    const removeHistory = (e, entryPrompt) => {
+        e.stopPropagation();
+        deleteFromCache(entryPrompt);
+        refreshHistory();
+        if (normalizeKey(entryPrompt) === normalizeKey(prompt)) {
+            setRoadmapData(null);
+            setFromCache(false);
+        }
+    };
+
+    // ── Force refresh (bypass cache) ──────────────────────────
+    const forceRefresh = async () => {
+        deleteFromCache(prompt);
+        refreshHistory();
+        setFromCache(false);
+        setRoadmapData(null);
+        await generateRoadmap();
+    };
+
     return (
         <div className="roadmap-container academic-mode">
             {/* The Persistent AI Assistant */}
@@ -80,40 +183,119 @@ export default function Roadmap({ onBack }) {
             </div>
 
             <aside className="roadmap-sidebar">
-                <div className="sidebar-header">
-                    <button className="back-button" onClick={onBack}>
-                        <ArrowLeft size={18} />
-                        <span className="desktop-only">Back to Terminal</span>
-                    </button>
-                    <h2 className="mobile-only-title">Scholar's Path</h2>
-                </div>
-
-                <div className="input-group-container">
-                    <div className="prompt-card">
-                        <label className="desktop-only text-label">Target Field of Study:</label>
-                        <textarea
-                            className="scholar-textarea"
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            disabled={isLoading}
-                            placeholder="e.g. Polymer Chemistry, Advanced Pedagogy..."
-                            rows={3}
-                        />
-                    </div>
-
-                    <button className="initiate-btn" onClick={generateRoadmap} disabled={isLoading}>
-                        {isLoading ? <Loader2 className="spin" size={20} /> : <><Compass size={20} /> Generate Academic Path</>}
-                    </button>
-                </div>
-
-                {isLoading && (
-                    <div className="scholarly-loading">
-                        <p>{STEPS_LIST[activeStep]}</p>
-                        <div className="scholarly-bar">
-                            <div className="bar-fill" style={{ width: `${(activeStep + 1) * 33}%` }} />
+                <div className="sidebar-inner">
+                    {/* Header */}
+                    <div className="sidebar-header">
+                        <div className="sidebar-brand">
+                            <div className="sidebar-brand-icon">✦</div>
+                            <span className="sidebar-brand-text desktop-only">Lumina AI</span>
                         </div>
+                        <button className="back-button" onClick={onBack}>
+                            <ArrowLeft size={16} />
+                            <span className="desktop-only">Back</span>
+                        </button>
+                        <h2 className="mobile-only-title">Scholar's Path</h2>
                     </div>
-                )}
+
+                    {/* Input */}
+                    <div className="input-group-container">
+                        <div className="prompt-card">
+                            <label className="desktop-only sidebar-section-label">Target Field of Study</label>
+                            <textarea
+                                className="scholar-textarea"
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                                disabled={isLoading}
+                                placeholder="e.g. Polymer Chemistry, Advanced Pedagogy..."
+                                rows={3}
+                            />
+                        </div>
+
+                        <button className="initiate-btn" onClick={generateRoadmap} disabled={isLoading}>
+                            {isLoading
+                                ? <Loader2 className="spin" size={20} />
+                                : <><Compass size={18} /> Generate Academic Path</>
+                            }
+                        </button>
+                    </div>
+
+                    {/* Loading bar */}
+                    {isLoading && (
+                        <div className="scholarly-loading">
+                            <p>{STEPS_LIST[activeStep]}</p>
+                            <div className="scholarly-bar">
+                                <div className="bar-fill" style={{ width: `${(activeStep + 1) * 33}%` }} />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Cache hit indicator */}
+                    {fromCache && roadmapData && (
+                        <div className="cache-hit-banner">
+                            <Zap size={12} />
+                            <span>Loaded from cache</span>
+                            <button className="cache-refresh-btn" onClick={forceRefresh} title="Re-generate from AI">
+                                ↺ Refresh
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Stats */}
+                    {roadmapData && (
+                        <div className="sidebar-stats desktop-only">
+                            <div className="stat-chip">
+                                <span className="stat-chip-value">{roadmapData.categories?.length || 0}</span>
+                                <span className="stat-chip-label">Stages</span>
+                            </div>
+                            <div className="stat-chip">
+                                <span className="stat-chip-value">
+                                    {roadmapData.categories?.reduce((acc, c) => acc + (c.topics?.length || 0), 0) || 0}
+                                </span>
+                                <span className="stat-chip-label">Topics</span>
+                            </div>
+                            <div className="stat-chip">
+                                <span className="stat-chip-value">{cacheHistory.length}</span>
+                                <span className="stat-chip-label">Cached</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* History Panel */}
+                    {cacheHistory.length > 0 && (
+                        <div className="history-panel desktop-only">
+                            <div className="history-panel-header">
+                                <Clock size={12} />
+                                <span>Recent Roadmaps</span>
+                            </div>
+                            <ul className="history-list">
+                                {cacheHistory.map((entry, i) => (
+                                    <li
+                                        key={i}
+                                        className={`history-item ${normalizeKey(entry.prompt) === normalizeKey(prompt) ? 'active' : ''}`}
+                                        onClick={() => loadFromHistory(entry)}
+                                    >
+                                        <div className="history-item-text">
+                                            <span className="history-prompt">{entry.prompt}</span>
+                                            <span className="history-time">{relativeTime(entry.savedAt)}</span>
+                                        </div>
+                                        <button
+                                            className="history-delete"
+                                            onClick={(e) => removeHistory(e, entry.prompt)}
+                                            title="Remove from cache"
+                                        >
+                                            <Trash2 size={11} />
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Footer */}
+                    <div className="sidebar-footer desktop-only">
+                        <p className="sidebar-footer-text">POWERED BY LUMINA AI · 2025</p>
+                    </div>
+                </div>
             </aside>
 
             <main className="roadmap-canvas">
@@ -123,6 +305,11 @@ export default function Roadmap({ onBack }) {
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                             <h2>Ready to begin your journey?</h2>
                             <p>Enter your research interest to construct a professional learning roadmap.</p>
+                            {cacheHistory.length > 0 && (
+                                <p className="empty-cache-hint">
+                                    ⚡ {cacheHistory.length} roadmap{cacheHistory.length > 1 ? 's' : ''} cached — click one in the sidebar to load instantly.
+                                </p>
+                            )}
                         </motion.div>
                     </div>
                 )}
@@ -145,7 +332,7 @@ export default function Roadmap({ onBack }) {
                             </div>
                         </div>
 
-                        {/* Mobile Side Timeline (Visible on mobile/tablet) */}
+                        {/* Mobile Side Timeline */}
                         <div className="mobile-side-timeline" />
 
                         <div className="stages-wrapper">
@@ -168,14 +355,13 @@ export default function Roadmap({ onBack }) {
                                                 <div className="card-accent" style={{ background: accentColor }} />
 
                                                 <header className="academic-card-header">
-                                                    <div className="icon-badge" style={{ background: accentColor }}>
+                                                    <div className="icon-badge" style={{ color: accentColor }}>
                                                         {getCategoryIcon(index)}
                                                     </div>
                                                     <div className="card-info">
                                                         <h3 className="degree-title">{item.title}</h3>
-                                                        <div className="accent-line" style={{ background: accentColor }} />
                                                     </div>
-                                                    <div className="year-pill" style={{ background: accentColor }}>
+                                                    <div className="year-pill" style={{ color: accentColor }}>
                                                         STAGE 0{index + 1}
                                                     </div>
                                                 </header>
@@ -184,7 +370,7 @@ export default function Roadmap({ onBack }) {
                                                     <ul className="learning-topics">
                                                         {item.topics.map((topic, i) => (
                                                             <li key={i} className="topic-li">
-                                                                <CheckCircle2 size={14} style={{ color: '#14b8a6', flexShrink: 0, marginTop: '2px' }} />
+                                                                <CheckCircle2 size={14} style={{ color: accentColor, flexShrink: 0, marginTop: '2px' }} />
                                                                 <span>{topic.name}</span>
                                                                 {topic.searchUrl && (
                                                                     <a href={topic.searchUrl} target="_blank" rel="noopener noreferrer" className="scholar-link">
@@ -200,7 +386,11 @@ export default function Roadmap({ onBack }) {
                                                     <span className="milestone-text">Milestone {index + 1}/{roadmapData.categories.length}</span>
                                                     <div className="milestone-track">
                                                         {roadmapData.categories.map((_, i) => (
-                                                            <div key={i} className={`milestone-dot ${i <= index ? 'filled' : ''}`} style={{ background: i <= index ? accentColor : '#eee' }} />
+                                                            <div
+                                                                key={i}
+                                                                className={`milestone-dot ${i <= index ? 'filled' : ''}`}
+                                                                style={{ background: i <= index ? accentColor : '#222' }}
+                                                            />
                                                         ))}
                                                     </div>
                                                 </footer>
