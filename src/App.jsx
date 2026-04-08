@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import './index.css';
 import Roadmap from './Roadmap';
 import FlashCards from './FlashCards';
+import CodeBlock from './CodeBlock';
 
 /* ═══════════════════════════════════════════════════════
    ERROR BOUNDARY
@@ -499,7 +500,16 @@ function App() {
                 ) : (
                   <div className="message-content markdown-body">
                     <ErrorBoundary fallback={msg.text}>
-                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                      <ReactMarkdown
+                        components={{
+                          code({ node, inline, className, children, ...props }) {
+                            if (inline) {
+                              return <code className={className} {...props}>{children}</code>;
+                            }
+                            return <CodeBlock className={className}>{children}</CodeBlock>;
+                          }
+                        }}
+                      >{msg.text}</ReactMarkdown>
                     </ErrorBoundary>
                   </div>
                 )

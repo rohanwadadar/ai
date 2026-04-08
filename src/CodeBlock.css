@@ -1,0 +1,363 @@
+/* CodeBlock.css — Live Code Execution with Neon Terminal UI */
+
+/* ═══════════════════════════════════════════════════════
+   ROOT WRAPPER
+═══════════════════════════════════════════════════════ */
+.code-block-root {
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #1e1e1e;
+    background: #0a0a0a;
+    margin: 0.75rem 0;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+/* ═══════════════════════════════════════════════════════
+   HEADER BAR
+═══════════════════════════════════════════════════════ */
+.code-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.55rem 0.85rem;
+    background: #111;
+    border-bottom: 1px solid #1e1e1e;
+    gap: 0.5rem;
+}
+
+.code-block-lang {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lang-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.lang-dot-python,
+.lang-dot-py {
+    background: #4584b6;
+}
+
+.lang-dot-javascript,
+.lang-dot-js {
+    background: #f7df1e;
+}
+
+.lang-dot-html {
+    background: #e96228;
+}
+
+.lang-dot-css {
+    background: #2965f1;
+}
+
+.lang-dot-bash,
+.lang-dot-shell,
+.lang-dot-sh {
+    background: #89e051;
+}
+
+.lang-dot-json {
+    background: #c678dd;
+}
+
+.lang-dot-sql {
+    background: #ff6b6b;
+}
+
+.lang-dot-text {
+    background: #444;
+}
+
+.lang-label {
+    font-size: 0.72rem;
+    color: #555;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-family: inherit;
+}
+
+/* Action buttons group */
+.code-block-actions {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+/* Run button */
+.run-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 6px;
+    border: 1px solid rgba(76, 214, 251, 0.3);
+    background: rgba(76, 214, 251, 0.08);
+    color: #4cd6fb;
+    font-size: 0.73rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.run-btn:hover:not(:disabled) {
+    background: rgba(76, 214, 251, 0.18);
+    border-color: #4cd6fb;
+    box-shadow: 0 0 12px rgba(76, 214, 251, 0.2);
+}
+
+.run-btn.running,
+.run-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.run-spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 2px solid rgba(76, 214, 251, 0.3);
+    border-top-color: #4cd6fb;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Copy button */
+.copy-btn {
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #1e1e1e;
+    background: transparent;
+    color: #444;
+    font-size: 0.73rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.copy-btn:hover {
+    border-color: #333;
+    color: #888;
+}
+
+/* ═══════════════════════════════════════════════════════
+   CODE BODY
+═══════════════════════════════════════════════════════ */
+.code-block-body {
+    overflow-x: auto;
+    background: #0a0a0a;
+}
+
+.code-block-body pre {
+    margin: 0;
+    padding: 1rem 1.1rem;
+}
+
+.code-block-body code {
+    font-family: inherit;
+    font-size: 0.85rem;
+    color: #c9d1d9;
+    line-height: 1.7;
+    white-space: pre;
+}
+
+/* ═══════════════════════════════════════════════════════
+   NEON TERMINAL PANEL
+═══════════════════════════════════════════════════════ */
+.terminal-root {
+    border-top: 1px solid #1e1e1e;
+}
+
+.terminal-root.success .terminal-titlebar {
+    border-bottom-color: rgba(76, 214, 251, 0.2);
+}
+
+.terminal-root.error .terminal-titlebar {
+    border-bottom-color: rgba(255, 80, 80, 0.2);
+}
+
+.terminal-root.running .terminal-titlebar {
+    border-bottom-color: rgba(250, 200, 50, 0.2);
+}
+
+/* Title bar — macOS-style */
+.terminal-titlebar {
+    display: flex;
+    align-items: center;
+    padding: 0.45rem 0.85rem;
+    background: #0d0d0d;
+    border-bottom: 1px solid #1a1a1a;
+    gap: 0.5rem;
+}
+
+.terminal-dots {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.t-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.t-dot.red {
+    background: #ff5f57;
+}
+
+.t-dot.yellow {
+    background: #ffbd2e;
+}
+
+.t-dot.green {
+    background: #28c840;
+}
+
+.terminal-title {
+    flex: 1;
+    text-align: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: inherit;
+}
+
+.terminal-root.success .terminal-title {
+    color: #4cd6fb;
+}
+
+.terminal-root.error .terminal-title {
+    color: #ff5555;
+}
+
+.terminal-root.running .terminal-title {
+    color: #f1c40f;
+    animation: pulse-text 1s ease infinite alternate;
+}
+
+@keyframes pulse-text {
+    from {
+        opacity: 0.5;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.terminal-actions {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.terminal-toggle,
+.terminal-clear {
+    background: transparent;
+    border: none;
+    color: #333;
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 0.15rem 0.35rem;
+    border-radius: 4px;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+
+.terminal-toggle:hover {
+    color: #aaa;
+}
+
+.terminal-clear:hover {
+    color: #ff5555;
+}
+
+/* Output area */
+.terminal-output {
+    padding: 1rem 1.1rem;
+    background: #060606;
+    min-height: 50px;
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.terminal-output pre {
+    margin: 0;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.terminal-root.success .terminal-output pre {
+    color: #7ee787;
+}
+
+.terminal-root.error .terminal-output pre {
+    color: #ff7070;
+}
+
+.terminal-root.running .terminal-output pre {
+    color: #f1c40f;
+}
+
+/* Custom neon scrollbar for terminal */
+.terminal-output::-webkit-scrollbar {
+    width: 4px;
+}
+
+.terminal-output::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.terminal-output::-webkit-scrollbar-thumb {
+    background: #1e1e1e;
+    border-radius: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   OVERRIDE: hide duplicate pre inside markdown-body
+   (We already wrap the code in our own pre)
+═══════════════════════════════════════════════════════ */
+.markdown-body .code-block-root pre {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════ */
+@media (max-width: 500px) {
+    .run-btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.65rem;
+    }
+
+    .copy-btn {
+        padding: 0.3rem 0.55rem;
+        font-size: 0.65rem;
+    }
+
+    .lang-label {
+        display: none;
+    }
+}
