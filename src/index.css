@@ -108,6 +108,55 @@ header h1 {
   transform: translateY(-1px);
 }
 
+.header-creator {
+  margin-left: auto;
+  margin-right: 1.5rem;
+}
+
+.creator-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(76, 214, 251, 0.05);
+  border: 1px solid rgba(76, 214, 251, 0.2);
+  border-radius: 20px;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: all 0.3s ease;
+}
+
+.creator-badge:hover {
+  background: rgba(76, 214, 251, 0.1);
+  border-color: var(--cyan-primary);
+  box-shadow: 0 0 10px rgba(76, 214, 251, 0.2);
+}
+
+.creator-sparkle {
+  color: var(--cyan-primary);
+  font-size: 0.9rem;
+}
+
+.creator-tag {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  display: block;
+  text-align: center;
+}
+
+.creator-tag a {
+  color: var(--cyan-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.creator-tag a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 768px) {
   header {
     padding: 0.75rem 1rem;

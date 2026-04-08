@@ -462,7 +462,10 @@ function App() {
 
           {/* Footer */}
           <div className="chat-sidebar-footer">
-            <span>Lumina AI · 2025</span>
+            <span style={{ fontSize: '0.75rem' }}>Lumina AI · 2025</span>
+            <span className="creator-tag">
+              Developed by <a href="https://rohanwadadar.github.io/portfolio/" target="_blank" rel="noopener noreferrer">Rohan Wadadar</a>
+            </span>
           </div>
         </div>
       </aside>
@@ -477,8 +480,16 @@ function App() {
             <button className="sidebar-toggle-btn" onClick={() => setSidebarOpen(true)} title="Chat History">
               ☰
             </button>
-            <h1>Lumina AI <span className="badge">Llama 3.1 · Groq</span></h1>
+            <h1>Lumina AI <span className="badge">Llama 3.1</span></h1>
           </div>
+
+          <div className="header-creator">
+            <a href="https://rohanwadadar.github.io/portfolio/" target="_blank" rel="noopener noreferrer" className="creator-badge">
+              <span className="creator-sparkle">✦</span>
+              Made by <strong style={{ color: 'var(--cyan-primary)' }}>Rohan Wadadar</strong>
+            </a>
+          </div>
+
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button className="new-chat-btn roadmap-btn" onClick={() => setCurrentView('roadmap')} title="Generate a Learning Roadmap">
               View Roadmap
