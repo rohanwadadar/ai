@@ -30,7 +30,7 @@ function SuggestLoader() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   DETECT if the user's message is asking for an MCQ quiz
+   DETECT MCQ REQUEST
 ═══════════════════════════════════════════════════════ */
 function isMcqRequest(text) {
   const lower = text.toLowerCase();
@@ -50,19 +50,12 @@ function McqQuiz({ data }) {
   const total = questions.length;
   const q = questions[currentQ];
 
-  const selectOption = (optIdx) => {
-    if (submitted) return;
-    setAnswers(prev => ({ ...prev, [q.id]: optIdx }));
-  };
-
+  const selectOption = (optIdx) => { if (submitted) return; setAnswers(prev => ({ ...prev, [q.id]: optIdx })); };
   const goNext = () => { if (currentQ < total - 1) setCurrentQ(currentQ + 1); };
   const goPrev = () => { if (currentQ > 0) setCurrentQ(currentQ - 1); };
   const handleSubmit = () => setSubmitted(true);
 
-  const score = submitted
-    ? questions.reduce((acc, q) => acc + (answers[q.id] === q.answer ? 1 : 0), 0)
-    : 0;
-
+  const score = submitted ? questions.reduce((acc, q) => acc + (answers[q.id] === q.answer ? 1 : 0), 0) : 0;
   const allAnswered = Object.keys(answers).length === total;
   const progressPercent = ((currentQ + 1) / total) * 100;
   const scorePercent = submitted ? Math.round((score / total) * 100) : 0;
@@ -72,7 +65,6 @@ function McqQuiz({ data }) {
 
   return (
     <div className="mcq-card animate-mcq">
-      {/* Header */}
       <div className="mcq-header">
         <span className="mcq-title">✦ {data.title || 'Quiz'}</span>
         <span className="mcq-counter">Question {currentQ + 1} of {total}</span>
@@ -82,16 +74,12 @@ function McqQuiz({ data }) {
       </div>
 
       {submitted ? (
-        /* ── Score result ─────────────────────────────── */
         <div className="mcq-score-panel animate-mcq">
           <div className="mcq-ring-container">
             <svg viewBox="0 0 100 100" className="mcq-ring-svg">
               <circle cx="50" cy="50" r="40" className="mcq-ring-bg" />
               <circle cx="50" cy="50" r="40" className="mcq-ring-fill"
-                style={{
-                  strokeDasharray: circumference,
-                  strokeDashoffset: circumference - (circumference * scorePercent / 100)
-                }}
+                style={{ strokeDasharray: circumference, strokeDashoffset: circumference - (circumference * scorePercent / 100) }}
               />
             </svg>
             <span className="mcq-ring-text">{score}/{total}</span>
@@ -102,8 +90,6 @@ function McqQuiz({ data }) {
             </span>
             <span className="mcq-score-sub">You scored {scorePercent}% — {score} correct out of {total}</span>
           </div>
-
-          {/* Answer review */}
           <div className="mcq-review">
             {questions.map((rq, ri) => {
               const userAns = answers[rq.id];
@@ -118,9 +104,7 @@ function McqQuiz({ data }) {
                       {!isCorrect && <> · Correct: <strong>{rq.options[rq.answer]}</strong></>}
                     </span>
                   </div>
-                  <span className={`mcq-review-icon ${isCorrect ? 'correct' : 'wrong'}`}>
-                    {isCorrect ? '✓' : '✗'}
-                  </span>
+                  <span className={`mcq-review-icon ${isCorrect ? 'correct' : 'wrong'}`}>{isCorrect ? '✓' : '✗'}</span>
                 </div>
               );
             })}
@@ -128,45 +112,30 @@ function McqQuiz({ data }) {
         </div>
       ) : (
         <>
-          {/* Question */}
           <p className="mcq-question">{q.question}</p>
-
-          {/* Options */}
           <div className="mcq-options">
             {q.options.map((opt, oi) => {
               const letter = String.fromCharCode(65 + oi);
               const isSelected = answers[q.id] === oi;
               return (
-                <button
-                  key={oi}
-                  className={`mcq-option ${isSelected ? 'selected' : ''}`}
-                  onClick={() => selectOption(oi)}
-                >
+                <button key={oi} className={`mcq-option ${isSelected ? 'selected' : ''}`} onClick={() => selectOption(oi)}>
                   <span className="mcq-option-letter">{letter}</span>
                   <span className="mcq-option-text">{opt}</span>
                 </button>
               );
             })}
           </div>
-
-          {/* Nav */}
           <div className="mcq-nav">
             <button className="mcq-nav-btn" onClick={goPrev} disabled={currentQ === 0}>← Prev</button>
             <div className="mcq-dots">
               {questions.map((_, di) => (
-                <span
-                  key={di}
-                  className={`mcq-dot ${di === currentQ ? 'active' : ''} ${answers[questions[di].id] !== undefined ? 'answered' : ''}`}
-                  onClick={() => setCurrentQ(di)}
-                />
+                <span key={di} className={`mcq-dot ${di === currentQ ? 'active' : ''} ${answers[questions[di].id] !== undefined ? 'answered' : ''}`} onClick={() => setCurrentQ(di)} />
               ))}
             </div>
             {currentQ < total - 1 ? (
               <button className="mcq-nav-btn" onClick={goNext}>Next →</button>
             ) : (
-              <button className="mcq-submit-btn" onClick={handleSubmit} disabled={!allAnswered}>
-                Submit Exam
-              </button>
+              <button className="mcq-submit-btn" onClick={handleSubmit} disabled={!allAnswered}>Submit Exam</button>
             )}
           </div>
         </>
@@ -176,33 +145,100 @@ function McqQuiz({ data }) {
 }
 
 /* ═══════════════════════════════════════════════════════
+   CHAT CACHE HELPERS (localStorage)
+═══════════════════════════════════════════════════════ */
+const CHAT_STORE_KEY = 'lumina_chat_sessions';
+const MAX_SESSIONS = 30;
+
+const loadSessions = () => {
+  try { return JSON.parse(localStorage.getItem(CHAT_STORE_KEY) || '[]'); }
+  catch { return []; }
+};
+
+const saveSessions = (sessions) => {
+  try {
+    const trimmed = sessions.slice(-MAX_SESSIONS);
+    localStorage.setItem(CHAT_STORE_KEY, JSON.stringify(trimmed));
+  } catch { /* storage full — ignore */ }
+};
+
+const makeSessionTitle = (messages) => {
+  const firstUser = messages.find(m => m.role === 'user');
+  if (!firstUser) return 'New Chat';
+  const title = firstUser.text.trim();
+  return title.length > 40 ? title.slice(0, 40) + '…' : title;
+};
+
+const relTime = (ts) => {
+  const d = (Date.now() - ts) / 1000;
+  if (d < 60) return 'just now';
+  if (d < 3600) return `${Math.floor(d / 60)}m ago`;
+  if (d < 86400) return `${Math.floor(d / 3600)}h ago`;
+  return `${Math.floor(d / 86400)}d ago`;
+};
+
+/* ═══════════════════════════════════════════════════════
    MAIN APP
 ═══════════════════════════════════════════════════════ */
-const WELCOME_MSG = { role: 'bot', text: "Hello! I'm Lumina AI, powered by Llama 3.1 via Groq. I **remember our conversation** for this session! Ask me anything — or request a quiz like **\"Give me 5 MCQ on JavaScript\"**!" };
+const WELCOME_MSG = {
+  role: 'bot',
+  text: "Hello! I'm **Lumina AI**, powered by Llama 3.1 via Groq. I remember our conversation for this session!\n\nAsk me anything — or try:\n- **\"Give me 5 MCQ on JavaScript\"** for a quiz\n- **\"Explain recursion\"** for a detailed answer"
+};
 
-// Production Backend URL (or localhost for dev)
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 function App() {
-  const [currentView, setCurrentView] = useState('chat'); // 'chat' or 'roadmap'
+  const [currentView, setCurrentView] = useState('chat');
   const [messages, setMessages] = useState([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [chatSessions, setChatSessions] = useState([]);
+  const [activeSessionId, setActiveSessionId] = useState(null);
 
   const chatEndRef = useRef(null);
   const typeIntervalRef = useRef(null);
   const typeResolveRef = useRef(null);
   const debounceRef = useRef(null);
   const skipSuggestRef = useRef(false);
-
-  // Unique session ID — generated once per page load, lives in RAM only
   const sessionIdRef = useRef(crypto.randomUUID());
 
-  // New Chat handler — clears memory on both frontend and backend
+  // ── On mount: load sessions from cache ──────────────────
+  useEffect(() => {
+    const stored = loadSessions();
+    setChatSessions(stored);
+  }, []);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isTyping]);
+
+  // ── Save current chat to localStorage ──────────────────
+  const persistCurrentChat = (msgs, sessionId) => {
+    if (msgs.length <= 1) return; // don't save empty/welcome-only chats
+    const sessions = loadSessions();
+    const idx = sessions.findIndex(s => s.id === sessionId);
+    const sessionData = {
+      id: sessionId,
+      title: makeSessionTitle(msgs),
+      messages: msgs,
+      updatedAt: Date.now(),
+    };
+    if (idx >= 0) sessions[idx] = sessionData;
+    else sessions.push(sessionData);
+    saveSessions(sessions);
+    setChatSessions([...sessions].reverse());
+  };
+
+  // ── + New Chat: save current → start fresh ──────────────
   const handleNewChat = async () => {
     handleStop();
+    // Save current session if it has real messages
+    persistCurrentChat(messages, sessionIdRef.current);
+
+    // Clear backend session
     try {
       await fetch(`${API_BASE}/api/clear`, {
         method: 'POST',
@@ -210,18 +246,51 @@ function App() {
         body: JSON.stringify({ session_id: sessionIdRef.current })
       });
     } catch (_) { }
-    sessionIdRef.current = crypto.randomUUID();
+
+    // Create new session
+    const newId = crypto.randomUUID();
+    sessionIdRef.current = newId;
+    setActiveSessionId(newId);
     setMessages([WELCOME_MSG]);
     setInput('');
     setSuggestions([]);
     setIsSuggesting(false);
+    setSidebarOpen(false);
   };
 
+  // ── Load a past session ─────────────────────────────────
+  const loadSession = (session) => {
+    // Save current session first
+    persistCurrentChat(messages, sessionIdRef.current);
+    handleStop();
+
+    sessionIdRef.current = session.id;
+    setActiveSessionId(session.id);
+    setMessages(session.messages);
+    setInput('');
+    setSuggestions([]);
+    setSidebarOpen(false);
+  };
+
+  // ── Delete a session ────────────────────────────────────
+  const deleteSession = (e, sessionId) => {
+    e.stopPropagation();
+    const updated = loadSessions().filter(s => s.id !== sessionId);
+    saveSessions(updated);
+    setChatSessions([...updated].reverse());
+    if (sessionIdRef.current === sessionId) {
+      handleNewChat();
+    }
+  };
+
+  // ── Auto-save when messages change ─────────────────────
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length > 1 && !isTyping) {
+      persistCurrentChat(messages, sessionIdRef.current);
+    }
   }, [messages, isTyping]);
 
-  // ── Debounced suggestions ─────────────────────────────
+  // ── Debounced suggestions ───────────────────────────────
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (skipSuggestRef.current) { skipSuggestRef.current = false; return; }
@@ -238,7 +307,7 @@ function App() {
         const data = await res.json();
         const list = data.suggestions || (data.suggestion ? [data.suggestion] : []);
         setSuggestions(list.slice(0, 2));
-      } catch (err) { console.error('Suggestion error:', err); setSuggestions([]); }
+      } catch { setSuggestions([]); }
       finally { setIsSuggesting(false); }
     }, 900);
     return () => clearTimeout(debounceRef.current);
@@ -257,7 +326,7 @@ function App() {
     setIsTyping(false);
   };
 
-  // ── Send message ──────────────────────────────────────
+  // ── Send message ────────────────────────────────────────
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
     setSuggestions([]); setIsSuggesting(false);
@@ -269,11 +338,8 @@ function App() {
     setIsTyping(true);
 
     try {
-      // ── Decide which endpoint to hit ──
       const mcqMode = isMcqRequest(userMessage);
-      const endpoint = mcqMode
-        ? `${API_BASE}/api/mcq`
-        : `${API_BASE}/api/chat`;
+      const endpoint = mcqMode ? `${API_BASE}/api/mcq` : `${API_BASE}/api/chat`;
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -290,11 +356,9 @@ function App() {
       const data = await response.json();
 
       if (mcqMode && data.mcq && Array.isArray(data.questions)) {
-        // ── MCQ response: render quiz card instantly ──
         setMessages(prev => [...prev, { role: 'bot', text: '', mcq: data }]);
         setIsTyping(false);
       } else {
-        // ── Regular text: typewriter effect ──
         const botText = data.response || JSON.stringify(data);
         await new Promise(res => {
           const timeout = setTimeout(res, 300);
@@ -303,7 +367,6 @@ function App() {
         setMessages(prev => [...prev, { role: 'bot', text: '' }]);
         await typeWriter(botText);
       }
-
     } catch (error) {
       setMessages(prev => [...prev, { role: 'bot', text: `⚠️ ${error.message}. Is your Flask backend running?` }]);
       setIsTyping(false);
@@ -327,7 +390,6 @@ function App() {
         if (i >= text.length) {
           clearInterval(typeIntervalRef.current); typeIntervalRef.current = null;
           setIsTyping(false);
-          setRobotStatus('idle');
           resolve();
         }
       }, dynamicSpeed);
@@ -339,77 +401,136 @@ function App() {
   }
 
   return (
-    <div className="app-container">
+    <div className="app-shell">
 
-      <header>
-        <h1>Lumina AI <span className="badge">Llama 3.1 · Groq</span></h1>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button className="new-chat-btn roadmap-btn" onClick={() => setCurrentView('roadmap')} title="Generate a Learning Roadmap">
-            View Roadmap Design
+      {/* ── Chat History Sidebar ── */}
+      <aside className={`chat-sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="chat-sidebar-inner">
+          {/* Sidebar Header */}
+          <div className="chat-sidebar-header">
+            <div className="chat-sidebar-brand">
+              <span className="chat-sidebar-brand-icon">✦</span>
+              <span className="chat-sidebar-brand-name">Lumina AI</span>
+            </div>
+            <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)}>✕</button>
+          </div>
+
+          {/* New Chat button */}
+          <button className="sidebar-new-chat-btn" onClick={handleNewChat}>
+            <span>＋</span> New Chat
           </button>
-          <button className="new-chat-btn" onClick={handleNewChat} title="Start a fresh conversation">
-            + New Chat
-          </button>
+
+          {/* Session list */}
+          <div className="session-list-label">Recent Conversations</div>
+          {chatSessions.length === 0 ? (
+            <div className="session-empty">No saved chats yet.<br />Start a conversation!</div>
+          ) : (
+            <ul className="session-list">
+              {chatSessions.map((session) => (
+                <li
+                  key={session.id}
+                  className={`session-item ${session.id === activeSessionId ? 'active' : ''}`}
+                  onClick={() => loadSession(session)}
+                >
+                  <div className="session-item-body">
+                    <span className="session-title">{session.title}</span>
+                    <span className="session-time">{relTime(session.updatedAt)}</span>
+                  </div>
+                  <button className="session-delete-btn" onClick={(e) => deleteSession(e, session.id)} title="Delete chat">
+                    🗑
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Footer */}
+          <div className="chat-sidebar-footer">
+            <span>Lumina AI · 2025</span>
+          </div>
         </div>
-      </header>
+      </aside>
 
-      <main className="chat-container">
-        {messages.map((msg, idx) => (
-          <div key={idx} className={`message ${msg.role}-message`}>
-            {msg.role === 'bot' ? (
-              msg.mcq ? (
-                <McqQuiz data={msg.mcq} />
+      {/* Sidebar backdrop */}
+      {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
+
+      {/* ── Main chat area ── */}
+      <div className="app-container">
+        <header>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button className="sidebar-toggle-btn" onClick={() => setSidebarOpen(true)} title="Chat History">
+              ☰
+            </button>
+            <h1>Lumina AI <span className="badge">Llama 3.1 · Groq</span></h1>
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button className="new-chat-btn roadmap-btn" onClick={() => setCurrentView('roadmap')} title="Generate a Learning Roadmap">
+              View Roadmap
+            </button>
+            <button className="new-chat-btn" onClick={handleNewChat} title="Start a fresh conversation">
+              ＋ New Chat
+            </button>
+          </div>
+        </header>
+
+        <main className="chat-container">
+          {messages.map((msg, idx) => (
+            <div key={idx} className={`message ${msg.role}-message`}>
+              {msg.role === 'bot' ? (
+                msg.mcq ? (
+                  <McqQuiz data={msg.mcq} />
+                ) : (
+                  <div className="message-content markdown-body">
+                    <ErrorBoundary fallback={msg.text}>
+                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    </ErrorBoundary>
+                  </div>
+                )
               ) : (
-                <div className="message-content markdown-body">
-                  <ErrorBoundary fallback={msg.text}>
-                    <ReactMarkdown>{msg.text}</ReactMarkdown>
-                  </ErrorBoundary>
+                <div className="message-content">{msg.text}</div>
+              )}
+            </div>
+          ))}
+
+          {isTyping && !typeIntervalRef.current && (
+            <div className="message bot-message typing">
+              <div className="dot" /><div className="dot" /><div className="dot" />
+            </div>
+          )}
+          <div ref={chatEndRef} />
+        </main>
+
+        <section className="input-area">
+          {isSuggesting && <SuggestLoader />}
+          {!isSuggesting && suggestions.length > 0 && (
+            <div className="suggestions-row">
+              <span className="suggestions-header">✦ Try instead:</span>
+              {suggestions.map((s, i) => (
+                <div key={i} className="suggestion-box animate-suggestion" onClick={() => applySuggestion(s)}>
+                  <span className="suggestion-num">{i + 1}</span>
+                  <span className="suggestion-text">{s}</span>
                 </div>
-              )
+              ))}
+            </div>
+          )}
+          <div className="input-row">
+            <input
+              type="text" value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !isTyping && handleSend()}
+              placeholder="Ask anything, or try: 'Give me 5 MCQ on Python'…"
+              disabled={isTyping && typeIntervalRef.current === null}
+            />
+            {isTyping && typeIntervalRef.current ? (
+              <button className="stop-btn" onClick={handleStop}>Stop</button>
             ) : (
-              <div className="message-content">{msg.text}</div>
+              <button className="send-btn" onClick={handleSend} disabled={isTyping || !input.trim()}>
+                {isTyping ? 'Thinking…' : 'Send'}
+              </button>
             )}
           </div>
-        ))}
-
-        {isTyping && !typeIntervalRef.current && (
-          <div className="message bot-message typing">
-            <div className="dot" /><div className="dot" /><div className="dot" />
-          </div>
-        )}
-        <div ref={chatEndRef} />
-      </main>
-
-      <section className="input-area">
-        {isSuggesting && <SuggestLoader />}
-        {!isSuggesting && suggestions.length > 0 && (
-          <div className="suggestions-row">
-            <span className="suggestions-header">✦ Try instead:</span>
-            {suggestions.map((s, i) => (
-              <div key={i} className="suggestion-box animate-suggestion" onClick={() => applySuggestion(s)}>
-                <span className="suggestion-num">{i + 1}</span>
-                <span className="suggestion-text">{s}</span>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="input-row">
-          <input
-            type="text" value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !isTyping && handleSend()}
-            placeholder="Ask anything, or try: 'Give me 5 MCQ on Python'…"
-            disabled={isTyping && typeIntervalRef.current === null}
-          />
-          {isTyping && typeIntervalRef.current ? (
-            <button className="stop-btn" onClick={handleStop}>Stop</button>
-          ) : (
-            <button className="send-btn" onClick={handleSend} disabled={isTyping || !input.trim()}>
-              {isTyping ? 'Thinking…' : 'Send'}
-            </button>
-          )}
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
