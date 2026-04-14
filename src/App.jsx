@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, Component } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { Loader2, FileText } from 'lucide-react';
 import './index.css';
 import Roadmap from './Roadmap';
 import FlashCards from './FlashCards';
@@ -205,6 +206,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chatSessions, setChatSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const chatEndRef = useRef(null);
   // v1.0 refs (PRESERVED BY ROHAN) — used by old typeWriter animation:
@@ -623,6 +625,36 @@ function App() {
     }
   };
 
+  // ── EXPORT STUDY GUIDE / CHEAT SHEET ──────────────────
+  const handleExportStudyGuide = async () => {
+    if (messages.length < 3 || isTyping || isExporting) return;
+    setIsExporting(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/cheat-sheet`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages })
+      });
+
+      if (!response.ok) throw new Error('Failed to generate study guide');
+      const data = await response.json();
+
+      setMessages(prev => [
+        ...prev,
+        { role: 'bot', text: `✨ **Instant Study Guide Generated** ✨\n\n${data.markdown}` }
+      ]);
+
+      // Auto-scroll to the newly generated guide
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+
+    } catch (e) {
+      alert("Failed to export study guide: " + e.message);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (currentView === 'roadmap') {
     return <Roadmap onBack={() => setCurrentView('chat')} />;
   }
@@ -702,8 +734,18 @@ function App() {
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              className="new-chat-btn roadmap-btn"
+              onClick={handleExportStudyGuide}
+              disabled={isExporting || isTyping || messages.length < 3}
+              title="Generate a Markdown Study Guide from this chat"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(124, 58, 237, 0.1)', borderColor: 'rgba(124, 58, 237, 0.3)', color: '#a855f7' }}
+            >
+              {isExporting ? <Loader2 size={14} className="spin" /> : <FileText size={14} />}
+              <span className="desktop-only">Export Cheat Sheet</span>
+            </button>
             <button className="new-chat-btn roadmap-btn" onClick={() => setCurrentView('roadmap')} title="Generate a Learning Roadmap">
-              View Roadmap
+              Roadmap
             </button>
             <button className="new-chat-btn" onClick={handleNewChat} title="Start a fresh conversation">
               ＋ New Chat
