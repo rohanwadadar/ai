@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, Component } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Loader2, FileText } from 'lucide-react';
+import { Loader2, FileText, Download } from 'lucide-react';
 import './index.css';
 import Roadmap from './Roadmap';
 import FlashCards from './FlashCards';
@@ -207,6 +207,15 @@ function App() {
   const [chatSessions, setChatSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [printData, setPrintData] = useState(null);
+
+  const triggerPrint = (text) => {
+    setPrintData(text);
+    setTimeout(() => {
+      window.print();
+      setPrintData(null);
+    }, 500); // 500ms allows React to render the print-container fully before print dialog opens
+  };
 
   const chatEndRef = useRef(null);
   // v1.0 refs (PRESERVED BY ROHAN) — used by old typeWriter animation:
@@ -642,7 +651,7 @@ function App() {
 
       setMessages(prev => [
         ...prev,
-        { role: 'bot', text: `✨ **Instant Study Guide Generated** ✨\n\n${data.markdown}` }
+        { role: 'bot', text: data.markdown, isCheatSheet: true }
       ]);
 
       // Auto-scroll to the newly generated guide
@@ -660,7 +669,25 @@ function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${printData ? 'is-printing' : ''}`}>
+      {printData && (
+        <div className="print-container markdown-body">
+          <ReactMarkdown
+            components={{
+              code({ node, inline, className, children, ...props }) {
+                const codeStr = String(children);
+                const isInline = inline || !codeStr.includes('\n');
+                if (isInline) {
+                  return <code className={className} style={{ background: '#eee', padding: '0.15em 0.45em', borderRadius: '5px', fontSize: '0.85em', fontFamily: 'monospace', color: 'black' }} {...props}>{children}</code>;
+                }
+                return <pre style={{ background: '#f5f5f5', padding: '1rem', color: 'black', borderRadius: '5px' }}><code className={className} {...props}>{children}</code></pre>;
+              }
+            }}
+          >
+            {printData}
+          </ReactMarkdown>
+        </div>
+      )}
 
       {/* ── Chat History Sidebar ── */}
       <aside className={`chat-sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -765,24 +792,34 @@ function App() {
                   ) : msg.mcq ? (
                     <McqQuiz data={msg.mcq} />
                   ) : (
-                    <div className="message-content markdown-body">
-                      <ErrorBoundary fallback={msg.text}>
-                        <ReactMarkdown
-                          components={{
-                            code({ node, inline, className, children, ...props }) {
-                              // In newer react-markdown, 'inline' may be undefined.
-                              // Detect inline code by checking if it has no newlines.
-                              const codeStr = String(children);
-                              const isInline = inline || !codeStr.includes('\n');
-                              if (isInline) {
-                                return <code className={className} style={{ background: 'rgba(255,255,255,0.06)', padding: '0.15em 0.45em', borderRadius: '5px', fontSize: '0.85em', fontFamily: 'monospace' }} {...props}>{children}</code>;
+                    <>
+                      {msg.isCheatSheet && (
+                        <div className="cheat-sheet-header">
+                          <span className="cheat-sheet-title">✨ Markdown Study Guide Generated</span>
+                          <button className="download-pdf-btn" onClick={() => triggerPrint(msg.text)}>
+                            <Download size={14} /> Download PDF
+                          </button>
+                        </div>
+                      )}
+                      <div className={`message-content markdown-body ${msg.isCheatSheet ? 'cheat-sheet-body' : ''}`}>
+                        <ErrorBoundary fallback={msg.text}>
+                          <ReactMarkdown
+                            components={{
+                              code({ node, inline, className, children, ...props }) {
+                                // In newer react-markdown, 'inline' may be undefined.
+                                // Detect inline code by checking if it has no newlines.
+                                const codeStr = String(children);
+                                const isInline = inline || !codeStr.includes('\n');
+                                if (isInline) {
+                                  return <code className={className} style={{ background: 'rgba(255,255,255,0.06)', padding: '0.15em 0.45em', borderRadius: '5px', fontSize: '0.85em', fontFamily: 'monospace' }} {...props}>{children}</code>;
+                                }
+                                return <CodeBlock className={className}>{children}</CodeBlock>;
                               }
-                              return <CodeBlock className={className}>{children}</CodeBlock>;
-                            }
-                          }}
-                        >{msg.text}</ReactMarkdown>
-                      </ErrorBoundary>
-                    </div>
+                            }}
+                          >{msg.text}</ReactMarkdown>
+                        </ErrorBoundary>
+                      </div>
+                    </>
                   )
                 ) : (
                   <div className="message-content">{msg.text}</div>

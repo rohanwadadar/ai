@@ -1466,3 +1466,102 @@ header {
   top: 0;
   z-index: 100;
 }
+
+/* ══════════════════════════════════════════════════════
+   CHEAT SHEET / PDF EXPORT STYLES
+══════════════════════════════════════════════════════ */
+.cheat-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cheat-sheet-title {
+  font-weight: 700;
+  color: #a855f7;
+  font-size: 1.1rem;
+}
+
+.download-pdf-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(124, 58, 237, 0.15);
+  color: #a855f7;
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.download-pdf-btn:hover {
+  background: rgba(124, 58, 237, 0.3);
+  color: #fff;
+}
+
+.cheat-sheet-body {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+/* NATIVE PRINT SETTINGS */
+.print-container {
+  display: none;
+}
+
+.app-shell.is-printing .chat-sidebar,
+.app-shell.is-printing .app-container {
+  display: none !important;
+}
+
+.app-shell.is-printing .print-container {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 2rem;
+  background: white;
+  color: black;
+  font-family: 'Inter', sans-serif;
+  z-index: 9999;
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .print-container {
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .print-container h1,
+  .print-container h2,
+  .print-container h3 {
+    color: black !important;
+    page-break-after: avoid;
+  }
+
+  .print-container p,
+  .print-container li {
+    color: #222 !important;
+  }
+
+  code,
+  pre {
+    color: black !important;
+    background: #f0f0f0 !important;
+    border: 1px solid #ccc !important;
+  }
+}
