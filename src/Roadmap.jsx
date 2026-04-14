@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2, Compass, ExternalLink, GraduationCap, Microscope, BookOpen, School, CheckCircle2, Clock, Trash2, Zap } from 'lucide-react';
+import { ArrowLeft, Loader2, Compass, ExternalLink, GraduationCap, Microscope, BookOpen, School, CheckCircle2, Clock, Trash2, Zap, ChevronDown, ChevronUp, BookOpenCheck, Link2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './Roadmap.css';
 import AiAvatar from './AiAvatar';
@@ -90,6 +90,36 @@ export default function Roadmap({ onBack }) {
     const [robotFullScreen, setRobotFullScreen] = useState(false);
     const [cacheHistory, setCacheHistory] = useState([]);
     const [fromCache, setFromCache] = useState(false);
+    // ── Topic Info Panel state ─────────────────────────────────
+    const [topicDetails, setTopicDetails] = useState({}); // key: "catIdx-topicIdx" → data
+    const [loadingTopic, setLoadingTopic] = useState(null); // key of currently loading topic
+    const [openTopic, setOpenTopic] = useState(null);       // key of currently open panel
+
+    const topicKey = (catIdx, topicIdx) => `${catIdx}-${topicIdx}`;
+
+    const handleTopicClick = async (topic, subject, catIdx, topicIdx) => {
+        const key = topicKey(catIdx, topicIdx);
+        // Toggle: close if already open
+        if (openTopic === key) { setOpenTopic(null); return; }
+        setOpenTopic(key);
+        // Return cached result if already fetched
+        if (topicDetails[key]) return;
+
+        setLoadingTopic(key);
+        try {
+            const res = await fetch(`${API_BASE}/api/topic-info`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ topic: topic.name, subject })
+            });
+            const data = await res.json();
+            setTopicDetails(prev => ({ ...prev, [key]: data }));
+        } catch (e) {
+            setTopicDetails(prev => ({ ...prev, [key]: { error: 'Failed to load.' } }));
+        } finally {
+            setLoadingTopic(null);
+        }
+    };
 
     // Load history on mount
     useEffect(() => {
@@ -368,17 +398,80 @@ export default function Roadmap({ onBack }) {
 
                                                 <div className="card-content">
                                                     <ul className="learning-topics">
-                                                        {item.topics.map((topic, i) => (
-                                                            <li key={i} className="topic-li">
-                                                                <CheckCircle2 size={14} style={{ color: accentColor, flexShrink: 0, marginTop: '2px' }} />
-                                                                <span>{topic.name}</span>
-                                                                {topic.searchUrl && (
-                                                                    <a href={topic.searchUrl} target="_blank" rel="noopener noreferrer" className="scholar-link">
-                                                                        <ExternalLink size={12} />
-                                                                    </a>
-                                                                )}
-                                                            </li>
-                                                        ))}
+                                                        {item.topics.map((topic, i) => {
+                                                            const key = topicKey(index, i);
+                                                            const isOpen = openTopic === key;
+                                                            const isLoadingThis = loadingTopic === key;
+                                                            const detail = topicDetails[key];
+                                                            return (
+                                                                <li key={i} className="topic-li topic-li-clickable" onClick={() => handleTopicClick(topic, roadmapData.title, index, i)}>
+                                                                    <div className="topic-li-row">
+                                                                        <CheckCircle2 size={14} style={{ color: accentColor, flexShrink: 0, marginTop: '2px' }} />
+                                                                        <span>{topic.name}</span>
+                                                                        <div className="topic-li-actions">
+                                                                            {topic.searchUrl && (
+                                                                                <a href={topic.searchUrl} target="_blank" rel="noopener noreferrer" className="scholar-link" onClick={e => e.stopPropagation()}>
+                                                                                    <ExternalLink size={12} />
+                                                                                </a>
+                                                                            )}
+                                                                            {isLoadingThis
+                                                                                ? <Loader2 size={13} className="spin" style={{ color: accentColor }} />
+                                                                                : <span className="topic-chevron" style={{ color: accentColor }}>{isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}</span>
+                                                                            }
+                                                                        </div>
+                                                                    </div>
+                                                                    <AnimatePresence>
+                                                                        {isOpen && (
+                                                                            <motion.div
+                                                                                key="panel"
+                                                                                initial={{ opacity: 0, height: 0 }}
+                                                                                animate={{ opacity: 1, height: 'auto' }}
+                                                                                exit={{ opacity: 0, height: 0 }}
+                                                                                transition={{ duration: 0.28, ease: 'easeInOut' }}
+                                                                                className="topic-detail-panel"
+                                                                                style={{ borderColor: accentColor + '33' }}
+                                                                                onClick={e => e.stopPropagation()}
+                                                                            >
+                                                                                {isLoadingThis || !detail ? (
+                                                                                    <div className="topic-detail-loading">
+                                                                                        <Loader2 size={16} className="spin" style={{ color: accentColor }} />
+                                                                                        <span>Fetching explanation…</span>
+                                                                                    </div>
+                                                                                ) : detail.error ? (
+                                                                                    <p className="topic-detail-error">{detail.error}</p>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <div className="topic-detail-explanation">
+                                                                                            <BookOpenCheck size={13} style={{ color: accentColor, flexShrink: 0 }} />
+                                                                                            <p>{detail.explanation}</p>
+                                                                                        </div>
+                                                                                        {detail.example && (
+                                                                                            <div className="topic-detail-example">
+                                                                                                <span className="topic-example-label">Example</span>
+                                                                                                <pre className="topic-example-pre"><code>{detail.example}</code></pre>
+                                                                                            </div>
+                                                                                        )}
+                                                                                        {detail.sources && detail.sources.length > 0 && (
+                                                                                            <div className="topic-detail-sources">
+                                                                                                <Link2 size={11} style={{ color: accentColor }} />
+                                                                                                <span className="topic-sources-label">Web Sources</span>
+                                                                                                <div className="topic-sources-list">
+                                                                                                    {detail.sources.map((s, si) => (
+                                                                                                        <a key={si} href={s.url} target="_blank" rel="noopener noreferrer" className="topic-source-link">
+                                                                                                            {s.title}
+                                                                                                        </a>
+                                                                                                    ))}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </>
+                                                                                )}
+                                                                            </motion.div>
+                                                                        )}
+                                                                    </AnimatePresence>
+                                                                </li>
+                                                            );
+                                                        })}
                                                     </ul>
                                                 </div>
 
