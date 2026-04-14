@@ -215,7 +215,50 @@ function App() {
   const skipSuggestRef = useRef(false);
   const sessionIdRef = useRef(crypto.randomUUID());
   const abortControllerRef = useRef(null);
-  const readerRef = useRef(null); // v2.0 - Changed by Rohan: holds the active SSE ReadableStream reader
+  const readerRef = useRef(null);
+  // v2.1 - GLITCH FIX by Rohan:
+  // Tokens arrive faster than React can paint. We buffer them in a ref
+  // and flush to state on a fixed 40ms interval (25fps) instead of
+  // calling setMessages() hundreds of times per second.
+  const tokenBufferRef = useRef('');
+  const flushIntervalRef = useRef(null);
+
+  const startFlushInterval = () => {
+    if (flushIntervalRef.current) return;
+    flushIntervalRef.current = setInterval(() => {
+      if (tokenBufferRef.current.length === 0) return;
+      const chunk = tokenBufferRef.current;
+      tokenBufferRef.current = '';
+      setMessages(prev => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last && last.role === 'bot') {
+          last.text = (last.text || '') + chunk;
+        }
+        return updated;
+      });
+      // Instant scroll while generating — smooth scroll breaks under rapid updates
+      chatEndRef.current?.scrollIntoView({ behavior: 'auto' });
+    }, 40); // 40ms = 25fps — smooth but not thrashing React
+  };
+
+  const stopFlushInterval = () => {
+    if (flushIntervalRef.current) {
+      clearInterval(flushIntervalRef.current);
+      flushIntervalRef.current = null;
+    }
+    // Flush any remaining buffered tokens
+    if (tokenBufferRef.current.length > 0) {
+      const remaining = tokenBufferRef.current;
+      tokenBufferRef.current = '';
+      setMessages(prev => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last && last.role === 'bot') last.text = (last.text || '') + remaining;
+        return updated;
+      });
+    }
+  };
 
   // ── On mount: load sessions from cache ──────────────────
   useEffect(() => {
@@ -223,8 +266,11 @@ function App() {
     setChatSessions(stored);
   }, []);
 
+  // Smooth scroll only when NOT streaming (avoids scroll-fight during generation)
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!flushIntervalRef.current) {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages, isTyping]);
 
   // ── Save current chat to localStorage ──────────────────
@@ -355,7 +401,10 @@ function App() {
 
   // v2.0 - Changed by Rohan: handleStop now ALSO tells the backend to close the Groq connection
   const handleStop = () => {
-    // Step 1: Cancel the browser-side fetch (closes the SSE EventSource)
+    // Step 1: Drain buffer and stop the flush timer cleanly
+    stopFlushInterval();
+    tokenBufferRef.current = '';
+    // Step 2: Cancel the browser-side fetch
     if (readerRef.current) {
       readerRef.current.cancel();
       readerRef.current = null;
@@ -364,13 +413,12 @@ function App() {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    // Step 2: v2.0 - Tell the Flask backend to set the abort_event flag
-    // This closes the Groq TCP connection — ACTUALLY stopping token generation
+    // Step 3: Tell the Flask backend to close the Groq connection
     fetch(`${API_BASE}/api/chat/stop`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id: sessionIdRef.current })
-    }).catch(() => { }); // fire-and-forget; don't await
+    }).catch(() => { });
     setIsTyping(false);
   };
 
@@ -478,23 +526,22 @@ function App() {
       const decoder = new TextDecoder();
       let buffer = '';
 
-      // Add an empty bot message — we will fill it in token-by-token
+      // v2.1 GLITCH FIX: Add empty bot message then start the flush timer
       setMessages(prev => [...prev, { role: 'bot', text: '' }]);
+      tokenBufferRef.current = '';
+      startFlushInterval(); // starts draining buffer to screen at 25fps
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-
-        // SSE lines arrive as "data: {...}\n\n"
         const lines = buffer.split('\n');
-        buffer = lines.pop(); // keep incomplete last line in buffer
+        buffer = lines.pop();
 
         for (const line of lines) {
           const trimmed = line.trim();
           if (!trimmed.startsWith('data:')) continue;
-
           const raw = trimmed.slice('data:'.length).trim();
           if (!raw) continue;
 
@@ -502,6 +549,7 @@ function App() {
             const parsed = JSON.parse(raw);
 
             if (parsed.error) {
+              stopFlushInterval();
               setMessages(prev => [
                 ...prev.slice(0, -1),
                 { role: 'bot', text: `⚠️ ${parsed.error}` }
@@ -511,33 +559,27 @@ function App() {
             }
 
             if (parsed.done) {
-              // Stream finished — all tokens received
+              // Stream finished — flush remaining buffer then stop
+              stopFlushInterval();
               setIsTyping(false);
               break;
             }
 
             if (parsed.token) {
-              // v2.0: Append each token directly to the last bot message
-              setMessages(prev => {
-                const updated = [...prev];
-                const lastMsg = updated[updated.length - 1];
-                if (lastMsg && lastMsg.role === 'bot') {
-                  lastMsg.text = (lastMsg.text || '') + parsed.token;
-                }
-                return updated;
-              });
+              // v2.1: Push token into buffer ONLY — flush interval handles the DOM update
+              tokenBufferRef.current += parsed.token;
             }
-          } catch (_) {
-            // Ignore malformed SSE lines
-          }
+          } catch (_) { /* ignore malformed SSE lines */ }
         }
       }
 
+      stopFlushInterval();
       setIsTyping(false);
 
     } catch (error) {
+      stopFlushInterval();
       if (error.name === 'AbortError') {
-        console.log('[v2.0] SSE stream aborted by user.');
+        console.log('[v2.1] SSE stream stopped.');
         return;
       }
       setMessages(prev => [...prev, { role: 'bot', text: `⚠️ ${error.message}. Is your Flask backend running?` }]);
@@ -637,38 +679,42 @@ function App() {
         </header>
 
         <main className="chat-container">
-          {messages.map((msg, idx) => (
-            <div key={idx} className={`message ${msg.role}-message`}>
-              {msg.role === 'bot' ? (
-                msg.flashcards ? (
-                  <FlashCards data={msg.flashcards} />
-                ) : msg.mcq ? (
-                  <McqQuiz data={msg.mcq} />
-                ) : (
-                  <div className="message-content markdown-body">
-                    <ErrorBoundary fallback={msg.text}>
-                      <ReactMarkdown
-                        components={{
-                          code({ node, inline, className, children, ...props }) {
-                            // In newer react-markdown, 'inline' may be undefined.
-                            // Detect inline code by checking if it has no newlines.
-                            const codeStr = String(children);
-                            const isInline = inline || !codeStr.includes('\n');
-                            if (isInline) {
-                              return <code className={className} style={{ background: 'rgba(255,255,255,0.06)', padding: '0.15em 0.45em', borderRadius: '5px', fontSize: '0.85em', fontFamily: 'monospace' }} {...props}>{children}</code>;
+          {messages.map((msg, idx) => {
+            // Apply .streaming class to the last bot message while generating
+            const isLastBotStreaming = isTyping && msg.role === 'bot' && idx === messages.length - 1;
+            return (
+              <div key={idx} className={`message ${msg.role}-message${isLastBotStreaming ? ' streaming' : ''}`}>
+                {msg.role === 'bot' ? (
+                  msg.flashcards ? (
+                    <FlashCards data={msg.flashcards} />
+                  ) : msg.mcq ? (
+                    <McqQuiz data={msg.mcq} />
+                  ) : (
+                    <div className="message-content markdown-body">
+                      <ErrorBoundary fallback={msg.text}>
+                        <ReactMarkdown
+                          components={{
+                            code({ node, inline, className, children, ...props }) {
+                              // In newer react-markdown, 'inline' may be undefined.
+                              // Detect inline code by checking if it has no newlines.
+                              const codeStr = String(children);
+                              const isInline = inline || !codeStr.includes('\n');
+                              if (isInline) {
+                                return <code className={className} style={{ background: 'rgba(255,255,255,0.06)', padding: '0.15em 0.45em', borderRadius: '5px', fontSize: '0.85em', fontFamily: 'monospace' }} {...props}>{children}</code>;
+                              }
+                              return <CodeBlock className={className}>{children}</CodeBlock>;
                             }
-                            return <CodeBlock className={className}>{children}</CodeBlock>;
-                          }
-                        }}
-                      >{msg.text}</ReactMarkdown>
-                    </ErrorBoundary>
-                  </div>
-                )
-              ) : (
-                <div className="message-content">{msg.text}</div>
-              )}
-            </div>
-          ))}
+                          }}
+                        >{msg.text}</ReactMarkdown>
+                      </ErrorBoundary>
+                    </div>
+                  )
+                ) : (
+                  <div className="message-content">{msg.text}</div>
+                )}
+              </div>
+            );
+          })}
 
           {/* ── Initial Feature Guide ── */}
           {messages.length === 1 && !isTyping && (
