@@ -154,7 +154,23 @@
     display: flex;
     flex-direction: column;
     padding: 1.25rem;
-    overflow: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--card-accent, #4cd6fb) transparent;
+}
+
+.flashcard-face::-webkit-scrollbar {
+    width: 4px;
+}
+
+.flashcard-face::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.flashcard-face::-webkit-scrollbar-thumb {
+    background: var(--card-accent, #4cd6fb);
+    border-radius: 10px;
+    opacity: 0.3;
 }
 
 /* Accent glow top line using CSS variable from JS */
@@ -210,8 +226,11 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    justify-content: center;
+    justify-content: flex-start;
+    /* Changed from center to prevent top cutoff */
     gap: 0.5rem;
+    margin-top: 0.5rem;
+    /* Space for the number */
 }
 
 .flashcard-front-icon {
@@ -244,8 +263,10 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
+    /* Changed from center */
     gap: 0.5rem;
+    margin-top: 0.5rem;
 }
 
 .flashcard-back-icon {
@@ -305,6 +326,7 @@
 .focus-face {
     border-radius: 22px;
     padding: 2rem;
+    justify-content: flex-start;
 }
 
 .focus-face .flashcard-front-text {
