@@ -207,11 +207,15 @@ function App() {
   const [activeSessionId, setActiveSessionId] = useState(null);
 
   const chatEndRef = useRef(null);
-  const typeIntervalRef = useRef(null);
-  const typeResolveRef = useRef(null);
+  // v1.0 refs (PRESERVED BY ROHAN) — used by old typeWriter animation:
+  // const typeIntervalRef = useRef(null);
+  // const typeResolveRef = useRef(null);
+  // v2.0 - Changed by Rohan: typeWriter removed; streaming IS the animation now
   const debounceRef = useRef(null);
   const skipSuggestRef = useRef(false);
   const sessionIdRef = useRef(crypto.randomUUID());
+  const abortControllerRef = useRef(null);
+  const readerRef = useRef(null); // v2.0 - Changed by Rohan: holds the active SSE ReadableStream reader
 
   // ── On mount: load sessions from cache ──────────────────
   useEffect(() => {
@@ -328,16 +332,95 @@ function App() {
     setIsSuggesting(false);
   };
 
+  // ════════════════════════════════════════════════════════
+  // v1.0 - handleStop (PRESERVED BY ROHAN)
+  // Only cancelled the browser fetch. Backend kept running.
+  // Groq continued generating — all tokens were wasted.
+  // ════════════════════════════════════════════════════════
+  // const handleStop_v1 = () => {
+  //   if (abortControllerRef.current) {
+  //     abortControllerRef.current.abort();
+  //     abortControllerRef.current = null;
+  //   }
+  //   if (typeIntervalRef.current) {
+  //     clearInterval(typeIntervalRef.current);
+  //     typeIntervalRef.current = null;
+  //   }
+  //   if (typeResolveRef.current) {
+  //     typeResolveRef.current();
+  //     typeResolveRef.current = null;
+  //   }
+  //   setIsTyping(false);
+  // };
+
+  // v2.0 - Changed by Rohan: handleStop now ALSO tells the backend to close the Groq connection
   const handleStop = () => {
-    if (typeIntervalRef.current) { clearInterval(typeIntervalRef.current); typeIntervalRef.current = null; }
-    if (typeResolveRef.current) { typeResolveRef.current(); typeResolveRef.current = null; }
+    // Step 1: Cancel the browser-side fetch (closes the SSE EventSource)
+    if (readerRef.current) {
+      readerRef.current.cancel();
+      readerRef.current = null;
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    // Step 2: v2.0 - Tell the Flask backend to set the abort_event flag
+    // This closes the Groq TCP connection — ACTUALLY stopping token generation
+    fetch(`${API_BASE}/api/chat/stop`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionIdRef.current })
+    }).catch(() => { }); // fire-and-forget; don't await
     setIsTyping(false);
   };
 
-  // ── Send message ────────────────────────────────────────
+  // ════════════════════════════════════════════════════════
+  // v1.0 - handleSend (PRESERVED BY ROHAN)
+  // Used blocking fetch + await res.json() — waited for the
+  // full LLM response before doing anything.
+  // Then used a fake typeWriter() animation to simulate streaming.
+  // ════════════════════════════════════════════════════════
+  // const handleSend_v1 = async () => {
+  //   if (!input.trim() || isTyping) return;
+  //   ... (blocking fetch to /api/chat) ...
+  //   const data = await response.json();
+  //   const botText = data.response || JSON.stringify(data);
+  //   setMessages(prev => [...prev, { role: 'bot', text: '' }]);
+  //   await typeWriter(botText);  // fake animation
+  // };
+  //
+  // v1.0 - typeWriter (PRESERVED BY ROHAN)
+  // A fake character-by-character animation using setInterval.
+  // Completely replaced by real SSE streaming in v2.0.
+  // const typeWriter = (text) => {
+  //   return new Promise((resolve) => {
+  //     typeResolveRef.current = resolve;
+  //     let i = 0;
+  //     const dynamicSpeed = Math.max(1, Math.min(10, 1500 / text.length));
+  //     const charsPerTick = text.length > 500 ? 5 : 2;
+  //     typeIntervalRef.current = setInterval(() => {
+  //       setMessages(prev => {
+  //         const updated = [...prev];
+  //         const lastMsg = updated[updated.length - 1];
+  //         if (lastMsg && lastMsg.role === 'bot') lastMsg.text = text.slice(0, i + charsPerTick);
+  //         return updated;
+  //       });
+  //       i += charsPerTick;
+  //       if (i >= text.length) {
+  //         clearInterval(typeIntervalRef.current); typeIntervalRef.current = null;
+  //         setIsTyping(false); resolve();
+  //       }
+  //     }, dynamicSpeed);
+  //   });
+  // };
+
+  // ── Send message (v2.0 — Changed by Rohan) ──────────────
+  // For normal chat: uses ReadableStream to read SSE token-by-token.
+  // For MCQ/Flashcards: still uses standard JSON (no streaming needed).
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
-    setSuggestions([]); setIsSuggesting(false);
+    setSuggestions([]);
+    setIsSuggesting(false);
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     const userMessage = input.trim();
@@ -345,19 +428,42 @@ function App() {
     setInput('');
     setIsTyping(true);
 
+    abortControllerRef.current = new AbortController();
+
     try {
       const flashMode = isFlashcardRequest(userMessage);
       const mcqMode = !flashMode && isMcqRequest(userMessage);
-      const endpoint = flashMode
-        ? `${API_BASE}/api/flashcards`
-        : mcqMode
-          ? `${API_BASE}/api/mcq`
-          : `${API_BASE}/api/chat`;
 
-      const response = await fetch(endpoint, {
+      // ── MCQ / Flashcard: still use standard blocking JSON (no SSE needed) ──
+      if (flashMode || mcqMode) {
+        const endpoint = flashMode ? `${API_BASE}/api/flashcards` : `${API_BASE}/api/mcq`;
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: userMessage, session_id: sessionIdRef.current }),
+          signal: abortControllerRef.current.signal
+        });
+        if (!response.ok) {
+          let errorMsg = 'Failed to fetch from backend';
+          try { const errData = await response.json(); errorMsg = errData.error || errorMsg; } catch (_) { }
+          throw new Error(errorMsg);
+        }
+        const data = await response.json();
+        if (flashMode && data.flashcards && Array.isArray(data.cards)) {
+          setMessages(prev => [...prev, { role: 'bot', text: '', flashcards: data }]);
+        } else if (mcqMode && data.mcq && Array.isArray(data.questions)) {
+          setMessages(prev => [...prev, { role: 'bot', text: '', mcq: data }]);
+        }
+        setIsTyping(false);
+        return;
+      }
+
+      // ── Normal chat: v2.0 SSE streaming ──────────────────
+      const response = await fetch(`${API_BASE}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userMessage, session_id: sessionIdRef.current })
+        body: JSON.stringify({ prompt: userMessage, session_id: sessionIdRef.current }),
+        signal: abortControllerRef.current.signal
       });
 
       if (!response.ok) {
@@ -366,50 +472,80 @@ function App() {
         throw new Error(errorMsg);
       }
 
-      const data = await response.json();
+      // v2.0: Get a reader from the SSE response body stream
+      const reader = response.body.getReader();
+      readerRef.current = reader;
+      const decoder = new TextDecoder();
+      let buffer = '';
 
-      if (flashMode && data.flashcards && Array.isArray(data.cards)) {
-        setMessages(prev => [...prev, { role: 'bot', text: '', flashcards: data }]);
-        setIsTyping(false);
-      } else if (mcqMode && data.mcq && Array.isArray(data.questions)) {
-        setMessages(prev => [...prev, { role: 'bot', text: '', mcq: data }]);
-        setIsTyping(false);
-      } else {
-        const botText = data.response || JSON.stringify(data);
-        await new Promise(res => {
-          const timeout = setTimeout(res, 300);
-          typeResolveRef.current = () => { clearTimeout(timeout); res(); };
-        });
-        setMessages(prev => [...prev, { role: 'bot', text: '' }]);
-        await typeWriter(botText);
+      // Add an empty bot message — we will fill it in token-by-token
+      setMessages(prev => [...prev, { role: 'bot', text: '' }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // SSE lines arrive as "data: {...}\n\n"
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // keep incomplete last line in buffer
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
+
+          const raw = trimmed.slice('data:'.length).trim();
+          if (!raw) continue;
+
+          try {
+            const parsed = JSON.parse(raw);
+
+            if (parsed.error) {
+              setMessages(prev => [
+                ...prev.slice(0, -1),
+                { role: 'bot', text: `⚠️ ${parsed.error}` }
+              ]);
+              setIsTyping(false);
+              return;
+            }
+
+            if (parsed.done) {
+              // Stream finished — all tokens received
+              setIsTyping(false);
+              break;
+            }
+
+            if (parsed.token) {
+              // v2.0: Append each token directly to the last bot message
+              setMessages(prev => {
+                const updated = [...prev];
+                const lastMsg = updated[updated.length - 1];
+                if (lastMsg && lastMsg.role === 'bot') {
+                  lastMsg.text = (lastMsg.text || '') + parsed.token;
+                }
+                return updated;
+              });
+            }
+          } catch (_) {
+            // Ignore malformed SSE lines
+          }
+        }
       }
+
+      setIsTyping(false);
+
     } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log('[v2.0] SSE stream aborted by user.');
+        return;
+      }
       setMessages(prev => [...prev, { role: 'bot', text: `⚠️ ${error.message}. Is your Flask backend running?` }]);
       setIsTyping(false);
+    } finally {
+      abortControllerRef.current = null;
+      readerRef.current = null;
     }
-  };
-
-  const typeWriter = (text) => {
-    return new Promise((resolve) => {
-      typeResolveRef.current = resolve;
-      let i = 0;
-      const dynamicSpeed = Math.max(1, Math.min(10, 1500 / text.length));
-      const charsPerTick = text.length > 500 ? 5 : 2;
-      typeIntervalRef.current = setInterval(() => {
-        setMessages(prev => {
-          const updated = [...prev];
-          const lastMsg = updated[updated.length - 1];
-          if (lastMsg && lastMsg.role === 'bot') lastMsg.text = text.slice(0, i + charsPerTick);
-          return updated;
-        });
-        i += charsPerTick;
-        if (i >= text.length) {
-          clearInterval(typeIntervalRef.current); typeIntervalRef.current = null;
-          setIsTyping(false);
-          resolve();
-        }
-      }, dynamicSpeed);
-    });
   };
 
   if (currentView === 'roadmap') {
@@ -585,7 +721,9 @@ function App() {
             </div>
           )}
 
-          {isTyping && !typeIntervalRef.current && (
+          {/* v2.0 - Changed by Rohan: typing dots now show while waiting for first SSE token */}
+          {/* v1.0 (PRESERVED BY ROHAN): {isTyping && !typeIntervalRef.current && (...)} */}
+          {isTyping && (
             <div className="message bot-message typing">
               <div className="dot" /><div className="dot" /><div className="dot" />
             </div>
@@ -612,13 +750,13 @@ function App() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !isTyping && handleSend()}
               placeholder="Ask anything, or try: 'Give me 5 MCQ on Python'…"
-              disabled={isTyping && typeIntervalRef.current === null}
+              disabled={isTyping} /* v2.0 - Changed by Rohan: simplified; no typeIntervalRef needed */
             />
-            {isTyping && typeIntervalRef.current ? (
+            {isTyping ? (
               <button className="stop-btn" onClick={handleStop}>Stop</button>
             ) : (
-              <button className="send-btn" onClick={handleSend} disabled={isTyping || !input.trim()}>
-                {isTyping ? 'Thinking…' : 'Send'}
+              <button className="send-btn" onClick={handleSend} disabled={!input.trim()}>
+                Send
               </button>
             )}
           </div>
