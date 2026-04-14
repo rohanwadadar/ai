@@ -216,41 +216,74 @@ function App() {
   const sessionIdRef = useRef(crypto.randomUUID());
   const abortControllerRef = useRef(null);
   const readerRef = useRef(null);
-  // v2.1 - GLITCH FIX by Rohan:
-  // Tokens arrive faster than React can paint. We buffer them in a ref
-  // and flush to state on a fixed 40ms interval (25fps) instead of
-  // calling setMessages() hundreds of times per second.
+  // v2.2 - SMOOTH DISPLAY ENGINE by Rohan
+  // Groq sends all tokens in ~0.5s → old flush dumped everything at once.
+  // Fix: rate-limit the DISPLAY to CHARS_PER_TICK per 40ms tick (~250 chars/sec).
+  // Short responses (< SHORT_THRESHOLD) still show instantly — no fake delay.
+  const CHARS_PER_TICK = 10;
+  const SHORT_THRESHOLD = 80;
   const tokenBufferRef = useRef('');
   const flushIntervalRef = useRef(null);
+  const streamDoneRef = useRef(false);
 
   const startFlushInterval = () => {
     if (flushIntervalRef.current) return;
+    streamDoneRef.current = false;
     flushIntervalRef.current = setInterval(() => {
-      if (tokenBufferRef.current.length === 0) return;
-      const chunk = tokenBufferRef.current;
-      tokenBufferRef.current = '';
+      const buf = tokenBufferRef.current;
+
+      if (buf.length === 0) {
+        // Buffer empty — if Groq stream is also done, stop the interval
+        if (streamDoneRef.current) {
+          clearInterval(flushIntervalRef.current);
+          flushIntervalRef.current = null;
+          setIsTyping(false);
+        }
+        return;
+      }
+
+      // Short response: stream done + remaining buffer is small → show all at once
+      if (streamDoneRef.current && buf.length < SHORT_THRESHOLD) {
+        tokenBufferRef.current = '';
+        setMessages(prev => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last && last.role === 'bot') last.text = (last.text || '') + buf;
+          return updated;
+        });
+        clearInterval(flushIntervalRef.current);
+        flushIntervalRef.current = null;
+        setIsTyping(false);
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+
+      // Long response: reveal at controlled rate — CHARS_PER_TICK chars per tick
+      const toDisplay = buf.slice(0, CHARS_PER_TICK);
+      tokenBufferRef.current = buf.slice(CHARS_PER_TICK);
       setMessages(prev => {
         const updated = [...prev];
         const last = updated[updated.length - 1];
-        if (last && last.role === 'bot') {
-          last.text = (last.text || '') + chunk;
-        }
+        if (last && last.role === 'bot') last.text = (last.text || '') + toDisplay;
         return updated;
       });
-      // Instant scroll while generating — smooth scroll breaks under rapid updates
       chatEndRef.current?.scrollIntoView({ behavior: 'auto' });
-    }, 40); // 40ms = 25fps — smooth but not thrashing React
+    }, 40);
   };
 
+  // signalStreamDone: called when SSE [DONE] received — lets interval drain buffer at pace
+  const signalStreamDone = () => { streamDoneRef.current = true; };
+
+  // stopFlushInterval: called by Stop button — immediately dumps remaining buffer
   const stopFlushInterval = () => {
+    streamDoneRef.current = true;
     if (flushIntervalRef.current) {
       clearInterval(flushIntervalRef.current);
       flushIntervalRef.current = null;
     }
-    // Flush any remaining buffered tokens
-    if (tokenBufferRef.current.length > 0) {
-      const remaining = tokenBufferRef.current;
-      tokenBufferRef.current = '';
+    const remaining = tokenBufferRef.current;
+    tokenBufferRef.current = '';
+    if (remaining) {
       setMessages(prev => {
         const updated = [...prev];
         const last = updated[updated.length - 1];
@@ -559,9 +592,8 @@ function App() {
             }
 
             if (parsed.done) {
-              // Stream finished — flush remaining buffer then stop
-              stopFlushInterval();
-              setIsTyping(false);
+              // Stream finished — signal done, let interval drain buffer at pace
+              signalStreamDone();
               break;
             }
 
@@ -573,13 +605,14 @@ function App() {
         }
       }
 
-      stopFlushInterval();
-      setIsTyping(false);
+      // SSE loop exited naturally (done=true reached) — signal done to flush engine
+      signalStreamDone();
+      // setIsTyping is handled by the flush interval once buffer drains
 
     } catch (error) {
-      stopFlushInterval();
+      stopFlushInterval(); // abort/error: dump buffer immediately
       if (error.name === 'AbortError') {
-        console.log('[v2.1] SSE stream stopped.');
+        console.log('[v2.2] SSE stream stopped by user.');
         return;
       }
       setMessages(prev => [...prev, { role: 'bot', text: `⚠️ ${error.message}. Is your Flask backend running?` }]);
