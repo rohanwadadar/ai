@@ -1524,9 +1524,7 @@ header {
 
 .app-shell.is-printing .print-container {
   display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: static;
   width: 100%;
   padding: 2rem;
   background: white;
@@ -1536,6 +1534,17 @@ header {
 }
 
 @media print {
+
+  html,
+  body,
+  #root,
+  .app-shell,
+  .app-shell.is-printing {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
   body {
     background: white !important;
     color: black !important;
