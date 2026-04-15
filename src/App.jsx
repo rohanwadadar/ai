@@ -244,8 +244,10 @@ function App() {
   const [printData, setPrintData] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
+  const [genPos, setGenPos] = useState({ bottom: 0, left: 0 });
   const textareaRef = useRef(null);
   const genDropdownRef = useRef(null);
+  const genBtnRef = useRef(null);
 
   /* auto-resize textarea */
   const autoResize = useCallback(() => {
@@ -272,6 +274,17 @@ function App() {
     setInput(prompt);
     setGenOpen(false);
     setTimeout(() => textareaRef.current?.focus(), 50);
+  };
+
+  /* toggle gen dropdown and measure trigger position for fixed placement */
+  const toggleGen = () => {
+    if (!genBtnRef.current) { setGenOpen(o => !o); return; }
+    const r = genBtnRef.current.getBoundingClientRect();
+    setGenPos({
+      bottom: window.innerHeight - r.top + 8,
+      left: r.left,
+    });
+    setGenOpen(o => !o);
   };
 
   const triggerPrint = (text) => {
@@ -1012,9 +1025,10 @@ function App() {
                 {!isTyping && (
                   <div className="gen-dropdown-wrap" ref={genDropdownRef}>
                     <button
+                      ref={genBtnRef}
                       type="button"
                       className={`tb-btn${genOpen ? ' active' : ''}`}
-                      onClick={() => setGenOpen(o => !o)}
+                      onClick={toggleGen}
                       title="Generate content"
                     >
                       <span>⚡</span>
@@ -1025,7 +1039,10 @@ function App() {
                     </button>
 
                     {genOpen && (
-                      <div className="gen-dropdown-menu">
+                      <div
+                        className="gen-dropdown-menu"
+                        style={{ bottom: genPos.bottom, left: genPos.left }}
+                      >
                         <div className="gen-dropdown-label">AI Generation</div>
                         {GENERATE_ITEMS.map((item, i) => (
                           <button
