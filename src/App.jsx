@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, Component } from 'react';
+import { useState, useRef, useEffect, useCallback, Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Loader2, FileText, Download } from 'lucide-react';
 import './index.css';
@@ -7,6 +7,37 @@ import FlashCards from './FlashCards';
 import CodeBlock from './CodeBlock';
 import VoiceToTextUI, { MicIcon } from './VoiceToText';
 import voiceStyles from './VoiceToText.module.css';
+
+/* ── helpers ─────────────────────────────────────────── */
+const formatTime = (d = new Date()) =>
+  d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+/* ── Generate-dropdown items ───────────────────────── */
+const GENERATE_ITEMS = [
+  { icon: '🃏', label: 'Flashcard Deck', prompt: 'Generate 6 flashcards on ' },
+  { icon: '✅', label: 'MCQ Quiz', prompt: 'Give me 8 MCQ on ' },
+  { icon: '🗺️', label: 'Learning Roadmap', prompt: 'Generate a learning roadmap on ' },
+  { icon: '💻', label: 'Code Challenge', prompt: 'Write a challenging coding problem about ' },
+  { icon: '🌐', label: 'Web Search', prompt: 'Search the web and explain: ' },
+  { icon: '📝', label: 'Cheat Sheet', prompt: 'Create a concise cheat sheet for ' },
+];
+
+/* ── Copy button with feedback ───────────────────────── */
+function CopyButton({ text }) {
+  const [copied, setCopied] = useState(false);
+  const handle = async () => {
+    try { await navigator.clipboard.writeText(text); } catch { }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button className={`copy-btn${copied ? ' copied' : ''}`} onClick={handle} title="Copy">
+      {copied
+        ? <><span>✓</span> Copied!</>
+        : <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg> Copy</>}
+    </button>
+  );
+}
 
 /* ═══════════════════════════════════════════════════════
    ERROR BOUNDARY
@@ -193,6 +224,7 @@ const relTime = (ts) => {
 ═══════════════════════════════════════════════════════ */
 const WELCOME_MSG = {
   role: 'bot',
+  ts: Date.now(),
   text: "Hello! I'm **Lumina AI**, powered by Llama 3.1 via Groq. How can I help you learn today?"
 };
 
@@ -211,6 +243,36 @@ function App() {
   const [isExporting, setIsExporting] = useState(false);
   const [printData, setPrintData] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [genOpen, setGenOpen] = useState(false);
+  const textareaRef = useRef(null);
+  const genDropdownRef = useRef(null);
+
+  /* auto-resize textarea */
+  const autoResize = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 180) + 'px';
+  }, []);
+
+  useEffect(() => { autoResize(); }, [input, autoResize]);
+
+  /* close gen dropdown on outside click */
+  useEffect(() => {
+    const handler = (e) => {
+      if (genDropdownRef.current && !genDropdownRef.current.contains(e.target))
+        setGenOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  /* pick a generate item: prefill input + close dropdown */
+  const handleGenPick = (prompt) => {
+    setInput(prompt);
+    setGenOpen(false);
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  };
 
   const triggerPrint = (text) => {
     setPrintData(text);
@@ -519,7 +581,7 @@ function App() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     const userMessage = input.trim();
-    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
+    setMessages(prev => [...prev, { role: 'user', ts: Date.now(), text: userMessage }]);
     setInput('');
     setIsTyping(true);
 
@@ -574,7 +636,7 @@ function App() {
       let buffer = '';
 
       // v2.1 GLITCH FIX: Add empty bot message then start the flush timer
-      setMessages(prev => [...prev, { role: 'bot', text: '' }]);
+      setMessages(prev => [...prev, { role: 'bot', ts: Date.now(), text: '' }]);
       tokenBufferRef.current = '';
       startFlushInterval(); // starts draining buffer to screen at 25fps
 
@@ -764,18 +826,8 @@ function App() {
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button
-              className="new-chat-btn roadmap-btn"
-              onClick={handleExportStudyGuide}
-              disabled={isExporting || isTyping || messages.length < 3}
-              title="Generate a Markdown Study Guide from this chat"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(124, 58, 237, 0.1)', borderColor: 'rgba(124, 58, 237, 0.3)', color: '#a855f7' }}
-            >
-              {isExporting ? <Loader2 size={14} className="spin" /> : <FileText size={14} />}
-              <span className="desktop-only">Export Cheat Sheet</span>
-            </button>
             <button className="new-chat-btn roadmap-btn" onClick={() => setCurrentView('roadmap')} title="Generate a Learning Roadmap">
-              Roadmap
+              🗺 Roadmap
             </button>
             <button className="new-chat-btn" onClick={handleNewChat} title="Start a fresh conversation">
               ＋ New Chat
@@ -785,48 +837,55 @@ function App() {
 
         <main className="chat-container">
           {messages.map((msg, idx) => {
-            // Apply .streaming class to the last bot message while generating
             const isLastBotStreaming = isTyping && msg.role === 'bot' && idx === messages.length - 1;
+            const ts = msg.ts ? formatTime(new Date(msg.ts)) : '';
             return (
-              <div key={idx} className={`message ${msg.role}-message${isLastBotStreaming ? ' streaming' : ''}`}>
-                {msg.role === 'bot' ? (
-                  msg.flashcards ? (
-                    <FlashCards data={msg.flashcards} />
-                  ) : msg.mcq ? (
-                    <McqQuiz data={msg.mcq} />
-                  ) : (
-                    <>
-                      {msg.isCheatSheet && (
-                        <div className="cheat-sheet-header">
-                          <span className="cheat-sheet-title">✨ Markdown Study Guide Generated</span>
-                          <button className="download-pdf-btn" onClick={() => triggerPrint(msg.text)}>
-                            <Download size={14} /> Download PDF
-                          </button>
-                        </div>
-                      )}
-                      <div className={`message-content markdown-body ${msg.isCheatSheet ? 'cheat-sheet-body' : ''}`}>
-                        <ErrorBoundary fallback={msg.text}>
-                          <ReactMarkdown
-                            components={{
-                              code({ node, inline, className, children, ...props }) {
-                                // In newer react-markdown, 'inline' may be undefined.
-                                // Detect inline code by checking if it has no newlines.
-                                const codeStr = String(children);
-                                const isInline = inline || !codeStr.includes('\n');
-                                if (isInline) {
-                                  return <code className={className} style={{ background: 'rgba(255,255,255,0.06)', padding: '0.15em 0.45em', borderRadius: '5px', fontSize: '0.85em', fontFamily: 'monospace' }} {...props}>{children}</code>;
+              <div key={idx} className={`message-wrapper ${msg.role}-message`}>
+                <div className={`message ${msg.role}-message${isLastBotStreaming ? ' streaming' : ''}`}>
+                  {msg.role === 'bot' ? (
+                    msg.flashcards ? (
+                      <FlashCards data={msg.flashcards} />
+                    ) : msg.mcq ? (
+                      <McqQuiz data={msg.mcq} />
+                    ) : (
+                      <>
+                        {msg.isCheatSheet && (
+                          <div className="cheat-sheet-header">
+                            <span className="cheat-sheet-title">✨ Markdown Study Guide Generated</span>
+                            <button className="download-pdf-btn" onClick={() => triggerPrint(msg.text)}>
+                              <Download size={14} /> Download PDF
+                            </button>
+                          </div>
+                        )}
+                        <div className={`message-content markdown-body ${msg.isCheatSheet ? 'cheat-sheet-body' : ''}`}>
+                          <ErrorBoundary fallback={msg.text}>
+                            <ReactMarkdown
+                              components={{
+                                code({ node, inline, className, children, ...props }) {
+                                  const codeStr = String(children);
+                                  const isInline = inline || !codeStr.includes('\n');
+                                  if (isInline) {
+                                    return <code className={className} style={{ background: 'rgba(255,255,255,0.06)', padding: '0.15em 0.45em', borderRadius: '5px', fontSize: '0.85em', fontFamily: 'monospace' }} {...props}>{children}</code>;
+                                  }
+                                  return <CodeBlock className={className}>{children}</CodeBlock>;
                                 }
-                                return <CodeBlock className={className}>{children}</CodeBlock>;
-                              }
-                            }}
-                          >{msg.text}</ReactMarkdown>
-                        </ErrorBoundary>
-                      </div>
-                    </>
-                  )
-                ) : (
-                  <div className="message-content">{msg.text}</div>
-                )}
+                              }}
+                            >{msg.text}</ReactMarkdown>
+                          </ErrorBoundary>
+                        </div>
+                      </>
+                    )
+                  ) : (
+                    <div className="message-content">{msg.text}</div>
+                  )}
+                </div>
+                {/* per-message meta row */}
+                <div className="message-meta">
+                  {ts && <span>{ts}</span>}
+                  {msg.role === 'bot' && msg.text && !isLastBotStreaming && (
+                    <CopyButton text={msg.text} />
+                  )}
+                </div>
               </div>
             );
           })}
@@ -905,43 +964,124 @@ function App() {
               ))}
             </div>
           )}
+
+          {/* ── Voice recorder OR rich composer ───────────── */}
           {isRecording ? (
-            /* ── Voice recorder replaces the input row while recording ── */
-            <VoiceToTextUI
-              onTranscript={(text) => {
-                if (text) setInput(text);
-                setIsRecording(false);
-              }}
-              onCancel={() => setIsRecording(false)}
-            />
-          ) : (
             <div className="input-row">
-              <input
-                type="text" value={input}
+              <VoiceToTextUI
+                onTranscript={(text) => { if (text) setInput(text); setIsRecording(false); }}
+                onCancel={() => setIsRecording(false)}
+              />
+            </div>
+          ) : (
+            <div className="composer">
+              {/* textarea */}
+              <textarea
+                ref={textareaRef}
+                className="composer-textarea"
+                value={input}
+                rows={1}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !isTyping && handleSend()}
-                placeholder="Ask anything, or try: 'Give me 5 MCQ on Python'…"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !isTyping) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder="Ask anything… (Shift+Enter for new line)"
                 disabled={isTyping}
               />
-              {/* Mic button — only visible when not streaming */}
-              {!isTyping && (
-                <button
-                  type="button"
-                  className={voiceStyles['mic-btn']}
-                  onClick={() => setIsRecording(true)}
-                  title="Speak your message"
-                  aria-label="Start voice input"
+
+              {/* toolbar */}
+              <div className="composer-toolbar">
+
+                {/* 🎙 Mic */}
+                {!isTyping && (
+                  <button
+                    type="button"
+                    className="tb-btn"
+                    onClick={() => setIsRecording(true)}
+                    title="Voice input"
+                    aria-label="Start voice input"
+                  >
+                    <MicIcon />
+                  </button>
+                )}
+
+                {/* ⚡ Generate dropdown */}
+                {!isTyping && (
+                  <div className="gen-dropdown-wrap" ref={genDropdownRef}>
+                    <button
+                      type="button"
+                      className={`tb-btn${genOpen ? ' active' : ''}`}
+                      onClick={() => setGenOpen(o => !o)}
+                      title="Generate content"
+                    >
+                      <span>⚡</span>
+                      <span>Generate</span>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+
+                    {genOpen && (
+                      <div className="gen-dropdown-menu">
+                        <div className="gen-dropdown-label">AI Generation</div>
+                        {GENERATE_ITEMS.map((item, i) => (
+                          <button
+                            key={i}
+                            className="gen-dropdown-item"
+                            onClick={() => handleGenPick(item.prompt)}
+                          >
+                            <span className="gen-dropdown-item-icon">{item.icon}</span>
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 📤 Export Cheat Sheet */}
+                {!isTyping && (
+                  <button
+                    type="button"
+                    className="tb-btn"
+                    onClick={handleExportStudyGuide}
+                    disabled={isExporting || isTyping || messages.length < 3}
+                    title="Export Cheat Sheet"
+                  >
+                    {isExporting
+                      ? <Loader2 size={13} className="spin" />
+                      : <FileText size={13} />}
+                    <span>Cheat Sheet</span>
+                  </button>
+                )}
+
+                <div className="toolbar-sep" />
+
+                {/* char counter */}
+                <span
+                  className={`char-count${input.length > 3500 ? ' limit' :
+                    input.length > 2500 ? ' warn' : ''
+                    }`}
                 >
-                  <MicIcon />
-                </button>
-              )}
-              {isTyping ? (
-                <button className="stop-btn" onClick={handleStop}>Stop</button>
-              ) : (
-                <button className="send-btn" onClick={handleSend} disabled={!input.trim()}>
-                  Send
-                </button>
-              )}
+                  {input.length > 0 && `${input.length}`}
+                </span>
+
+                {/* Send / Stop */}
+                {isTyping ? (
+                  <button className="stop-btn" onClick={handleStop}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2" /></svg>
+                    Stop
+                  </button>
+                ) : (
+                  <button className="send-btn" onClick={handleSend} disabled={!input.trim()}>
+                    Send
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </section>
