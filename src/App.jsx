@@ -5,6 +5,8 @@ import './index.css';
 import Roadmap from './Roadmap';
 import FlashCards from './FlashCards';
 import CodeBlock from './CodeBlock';
+import VoiceToTextUI, { MicIcon } from './VoiceToText';
+import voiceStyles from './VoiceToText.module.css';
 
 /* ═══════════════════════════════════════════════════════
    ERROR BOUNDARY
@@ -208,6 +210,7 @@ function App() {
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
   const [printData, setPrintData] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
 
   const triggerPrint = (text) => {
     setPrintData(text);
@@ -902,22 +905,45 @@ function App() {
               ))}
             </div>
           )}
-          <div className="input-row">
-            <input
-              type="text" value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !isTyping && handleSend()}
-              placeholder="Ask anything, or try: 'Give me 5 MCQ on Python'…"
-              disabled={isTyping} /* v2.0 - Changed by Rohan: simplified; no typeIntervalRef needed */
+          {isRecording ? (
+            /* ── Voice recorder replaces the input row while recording ── */
+            <VoiceToTextUI
+              onTranscript={(text) => {
+                if (text) setInput(text);
+                setIsRecording(false);
+              }}
+              onCancel={() => setIsRecording(false)}
             />
-            {isTyping ? (
-              <button className="stop-btn" onClick={handleStop}>Stop</button>
-            ) : (
-              <button className="send-btn" onClick={handleSend} disabled={!input.trim()}>
-                Send
-              </button>
-            )}
-          </div>
+          ) : (
+            <div className="input-row">
+              <input
+                type="text" value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && !isTyping && handleSend()}
+                placeholder="Ask anything, or try: 'Give me 5 MCQ on Python'…"
+                disabled={isTyping}
+              />
+              {/* Mic button — only visible when not streaming */}
+              {!isTyping && (
+                <button
+                  type="button"
+                  className={voiceStyles['mic-btn']}
+                  onClick={() => setIsRecording(true)}
+                  title="Speak your message"
+                  aria-label="Start voice input"
+                >
+                  <MicIcon />
+                </button>
+              )}
+              {isTyping ? (
+                <button className="stop-btn" onClick={handleStop}>Stop</button>
+              ) : (
+                <button className="send-btn" onClick={handleSend} disabled={!input.trim()}>
+                  Send
+                </button>
+              )}
+            </div>
+          )}
         </section>
       </div>
     </div>
